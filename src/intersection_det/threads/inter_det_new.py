@@ -22,7 +22,7 @@ def inter_det(image):
     dim = (640, 480)
     
     # resize image
-    resized = cv2.resize(src, dim) #creates problem with distance estimation
+    resized = cv2.resize(src, dim)
     gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
 
     bw = cv2.Canny(gray,255, 255,apertureSize = 3) #250, 255
@@ -37,7 +37,6 @@ def inter_det(image):
     # Apply morphology operations
     horizontal = cv2.erode(horizontal, horizontalStructure)
     horizontal = cv2.dilate(horizontal, horizontalStructure)
-    cv2.imshow('fuck', horizontal)
 
     # Find edge coordinates of pixels with value 1
     coordinates = np.column_stack(np.where(horizontal == 255))
@@ -54,6 +53,7 @@ def inter_det(image):
         # print(f"end of intersection (pixel): {end[1], end[0]}")
     else:
         print("No pixels with value 255 found.")
+        
 
     return horizontal, start, end
 

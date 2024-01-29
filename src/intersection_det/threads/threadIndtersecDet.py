@@ -31,7 +31,7 @@ class threadInterDet(ThreadWithStop):
         self.pipeSendImg = pipeSendImg
         self.estimate = False
         self.subscribe()
-        self.pipeRecvEst.send("ready")   #send ready flag through pipe  
+        self.pipeRecvEst.send("ready")   #send ready flag through pipe 
 
     def subscribe(self):
         """Subscribe function. In this function we make all the required subscribe to process gateway"""
@@ -41,7 +41,7 @@ class threadInterDet(ThreadWithStop):
                 "Subscribe/Unsubscribe": "subscribe",
                 "Owner": Estimate.Owner.value,
                 "msgID": Estimate.msgID.value,
-                "To": {"receiver": "threadInterDet", "pipe": self.pipeSendLook},
+                "To": {"receiver": "threadInterDet", "pipe": self.pipeSendEst},
             }
         )
 
@@ -88,12 +88,16 @@ class threadInterDet(ThreadWithStop):
 
         while self._running:
             if self.pipeRecvEst.poll():
-                    
+
                 self.estimate = self.pipeRecvEst.recv()
+                self.estimate = self.estimate['value']
                 if self.estimate:                                       #if there has been a valid request for intersection distance estimation
                     self.pipeRecvImg.send("ready")                      #ready for frame
-                    
+
                     frame = self.pipeRecvImg.recv()                     #recieve image
+                    image_data = base64.b64decode(frame['value'])       #decode frame
+                    frame = np.frombuffer(image_data, dtype=np.uint8)
+                    frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
                     frame, start, end = inter.inter_det(frame)          #detect intersection
                     coordinates = inter.calculate_distance(start)       #calculate distance
                     distance = coordinates[2]                           #keep Z-value

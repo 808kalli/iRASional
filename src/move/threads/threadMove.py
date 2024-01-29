@@ -45,7 +45,8 @@ EngineRun,
 SpeedMotor,
 Path,
 Calculate,
-Estimate
+Estimate,
+InterDistance
 )
 from src.templates.threadwithstop import ThreadWithStop
 
@@ -113,6 +114,15 @@ class threadMove(ThreadWithStop):
                 "Owner": Path.Owner.value,
                 "msgID": Path.msgID.value,
                 "To": {"receiver": "threadMove", "pipe": self.pipeSendPathPlanning},
+            }
+        )
+
+        self.queuesList["Config"].put(
+            {
+                "Subscribe/Unsubscribe": "subscribe",
+                "Owner": InterDistance.Owner.value,
+                "msgID": InterDistance.msgID.value,
+                "To": {"receiver": "threadMove", "pipe": self.pipeSendInterDet},
             }
         )
 
@@ -217,7 +227,20 @@ class threadMove(ThreadWithStop):
             }   
         )
 
+        time.sleep(0.5)
+
         while self._running:
             if self.pipeRecvInterDet.poll():
                 inter_distance = self.pipeRecvInterDet.recv()
                 print("Distance to intersection: ", inter_distance['value'])
+                
+                self.pipeRecvInterDet.send("ready")         #send ready flag through pipe for new estimation
+                
+                self.queuesList[Estimate.Queue.value].put(  #send request to do intersection detection
+                    {
+                        "Owner": Estimate.Owner.value,
+                        "msgID": Estimate.msgID.value,
+                        "msgType": Estimate.msgType.value,
+                        "msgValue": True
+                    }   
+                )
