@@ -55,6 +55,8 @@ from src.traffic_signs.processTraffic_Signs import processTrafficSigns
 
 from src.path_planning.processPathPlanning import processPathPlanning
 
+from src.intersection_det.processIntersecDet import processIntersecDet
+
 # ======================================== SETTING UP ====================================
 allProcesses = list()
 queueList = {
@@ -73,7 +75,8 @@ PCCommunicationDashBoard = False
 CarsAndSemaphores = False
 SerialHandler = False
 Signs_Detection = False
-PathPlanning = True
+InterDet = True
+PathPlanning = False
 Move = True
 # ===================================== SETUP PROCESSES ==================================
 
@@ -109,6 +112,10 @@ if TrafficCommunication:
 if PathPlanning:
     processPathPlanning = processPathPlanning(queueList, logging)
     allProcesses.append(processPathPlanning)
+
+if InterDet:
+    processIntersecDet = processIntersecDet(queueList, logging)
+    allProcesses.append(processIntersecDet)
 
 # Initializing serial connection NUCLEO --> PI
 if SerialHandler:
