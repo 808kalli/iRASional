@@ -100,12 +100,7 @@ if __name__ == "__main__":
     print("yes")
     traffic_communication.start()
     time.sleep(3)
-    #print(shared_memory.get())
-    print(queueList["General"].get())
-    m = "deviceSpeed"
-
-    val = [0.2] # 0.2 is a speed example, Where speed is measured in cm/s
-
-    shared_memory.insert(m, val)
+    #print(queueList["General"].get())
+  
 
     traffic_communication.stop()

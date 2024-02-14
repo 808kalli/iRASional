@@ -58,8 +58,7 @@ class Gps:
     # Filter out corrupted UART data and perform trilateration 
     def update(self,ser):
         value = str(ser.readline().decode('utf-8', errors='replace'))
-        #print("Raw Data: ",value)
-        if(("0x92bb: =" in value) and (" | 0x14a6: =" in value) and (" | 0x9832: =" in value) and ("\r\n" in value)):
+        if(("0x92bb: =" in value) and (" | 0x9832: =" in value) and (" | 0x14a6: =" in value) and ("\r\n" in value)):
         # if(("4818" in value) and ("528d" in value) and ("84b9" in value) and ("\r\n" in value)):
             data = value.split(" | ")
             # print("Data: ", data)
@@ -87,21 +86,18 @@ class Gps:
                             self.count += 1
                     if self.count == self.samples_to_count:
                         self.total /= self.samples_to_count
-                        print(self.total)
-                        #scatter.set_offsets(total)
+                        result = self.total
                         # print("Tag: ", total)
                         self.total = np.array((0,0))
                         self.count = 0
+                        return result
                 else:
-                    print("Node Length / Int Error")
+                    #print("Node Length / Int Error")
                     tag = self.previous_value
             else:
-                print("3 node Error")
+                #print("3 node Error")
                 tag = self.previous_value
         else:
-            print("Readline Error")
+            #print("Readline Error")
             tag = self.previous_value
-
-
-
 

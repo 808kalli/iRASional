@@ -90,14 +90,14 @@ class threadRemoteHandler(ThreadWithStop):
                 "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
             }
         )
-        self.queues["Config"].put(
-            {
-                "Subscribe/Unsubscribe": "subscribe",
-                "Owner": Location.Owner.value,
-                "msgID": Location.msgID.value,
-                "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
-            }
-        )
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": Location.Owner.value,
+        #         "msgID": Location.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
         self.queues["Config"].put(
             {
                 "Subscribe/Unsubscribe": "subscribe",

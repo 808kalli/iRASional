@@ -47,7 +47,7 @@ class processSerialHandler(WorkerProcess):
 
     # ===================================== INIT =========================================
     def __init__(self, queueList, logging, debugging=False, example=False):
-        devFile = "/dev/ttyACM0"
+        devFile = "/dev/ttyACM1"
         logFile = "historyFile.txt"
 
         # comm init

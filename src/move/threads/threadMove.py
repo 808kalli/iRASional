@@ -47,7 +47,8 @@ from src.utils.messages.allMessages import (
     InterDistance,
     MoveConfig,
     CalcPos,
-    Pos
+    Pos,
+    Location
 )
 from src.templates.threadwithstop import ThreadWithStop
 
@@ -254,6 +255,15 @@ class threadMove(ThreadWithStop):
         
         time.sleep(0.5) #wait for initializations of the other processes
 
+        self.queuesList[CalcPos.Queue.value].put( #send request to do position calculation
+            {
+                "Owner": CalcPos.Owner.value,
+                "msgID": CalcPos.msgID.value,
+                "msgType": CalcPos.msgType.value,
+                "msgValue": True
+            }   
+        )
+
         
         while self._running:
             # ========== check if engine button is pressed ==========#
@@ -397,21 +407,30 @@ class threadMove(ThreadWithStop):
 
                     #========================LOCALIZATION==========================================
 
-                    self.queuesList[CalcPos.Queue.value].put( #send request to do position calculation
-                        {
-                            "Owner": CalcPos.Owner.value,
-                            "msgID": CalcPos.msgID.value,
-                            "msgType": CalcPos.msgType.value,
-                            "msgValue": True
-                        }   
-                    )
+                    try:
+                        if self.pipeRecvcamera_lf.poll():
+                            frame = self.pipeRecvcamera_lf.recv()
+                            image_data = base64.b64decode(frame["value"])
+                            img = np.frombuffer(image_data, dtype=np.uint8)
+                            image = cv2.imdecode(img, cv2.IMREAD_COLOR)
+                            cv2.imwrite("test.jpg", image)
+                            angle = lf.followLane(image, self.K, self.speed)
+                            if angle is not None:
+                                angle = np.clip(angle, -25, 25)
+                                steer(self.queuesList, angle)
+                            self.pipeRecvcamera_lf.send("ready")
 
-                    time.sleep(0.5)
+                        if self.pipeRecvPos.poll():
+                            coordinates = self.pipeRecvPos.recv()['value']
+                            print(coordinates)
+                            self.pipeRecvPos.send("ready")
 
-                    if self.pipeRecvPos.poll():
-                        coordinates = self.pipeRecvPos.recv()['value']
-                        print("Coords: ", coordinates)
-                        self.pipeRecvPos.send("ready")
+                    except:
+                        logging.exception("Error in Thread Move", exc_info=True)
+                        print("error")
+                        if self.pipeRecvcamera_lf.poll():
+                            self.pipeRecvcamera_lf.recv()
+                        self.pipeRecvcamera_lf.send("ready")
                         
                     
 

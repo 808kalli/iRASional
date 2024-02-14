@@ -99,16 +99,16 @@ class threadKalman(ThreadWithStop):
         
         #initial values
         dt = 0.1        #time interval
-        x_x = 0         #initial x position
-        x_y = 0         #initial y position
+        x_x = 2.0         #initial x position
+        x_y = 2.4         #initial y position
         u0_x = 0        #initial x velocity
         u0_y = 0        #initial y velocity
         a_x = 0         #initial x acceleration
         a_y = 0         #initial y acceleration
 
         #IMU acceleration covarriance
-        s_a_x = 1e-4
-        s_a_y = 1e-4
+        s_a_x = 1e-2
+        s_a_y = 1e-2
 
         #GPS observation covarriance
         s_x = 1e-4
@@ -156,16 +156,20 @@ class threadKalman(ThreadWithStop):
                             accel = np.array([a_x, a_y])
 
                             x, P = Kalman.predict(x, F, G, accel, P, Q)         #predict new state
-                            x, P = Kalman.update(x, (0.0, 0.0), H, P, R)          #update state
+
+                            x_imu = (x[0], x[1])
 
                             self.pipeRecvIMUReading.send("ready")
 
-                        # if self.pipeRecvGPSReading.poll():
-                        #     self.pos = self.pipeRecvGPSReading.recv()['value']
+                        if self.pipeRecvGPSReading.poll():
+                            self.pos = self.pipeRecvGPSReading.recv()['value']/1000
 
-                        #     x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+                            x, P = Kalman.update(x, self.pos, H, P, R)          #update state
 
-                        #     self.pipeRecvGPSReading.send("ready")
+                            # print(f"IMU: {x_imu} | GPS: {self.pos} | KALMAN: {(x[0], x[1])}")         #print values
+
+
+                            self.pipeRecvGPSReading.send("ready")
 
                         coordinates = (x[0], x[1])
 

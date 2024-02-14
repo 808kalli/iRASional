@@ -28,7 +28,7 @@ class threadPathPlanning(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
-        self.source= 427         #source from which to calculate new path
+        self.source = 427         #source from which to calculate new path
         pipeRecvCalc, pipeSendCalc = Pipe()
         self.pipeRecvCalc = pipeRecvCalc
         self.pipeSendCalc = pipeSendCalc
@@ -137,3 +137,5 @@ class threadPathPlanning(ThreadWithStop):
                         "msgValue": path
                     }
                 )
+
+                self.pipeRecvCalc.send("ready")   #send ready flag through pipe

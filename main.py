@@ -73,14 +73,14 @@ logging = logging.getLogger()
 TrafficCommunication = False
 Camera = False
 PCCommunicationDemo = False
-PCCommunicationDashBoard = False
+PCCommunicationDashBoard = True
 CarsAndSemaphores = False
-SerialHandler = False
+SerialHandler = True
 Signs_Detection = False
 PathPlanning = False
-Gps= True
-Kalman = False
-Move = False
+Gps = True
+Kalman = True
+Move = True
 # ===================================== SETUP PROCESSES ==================================
 
 # Initializing gateway

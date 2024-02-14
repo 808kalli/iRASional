@@ -59,7 +59,7 @@ class threadTrafficCommunication(ThreadWithStop):
     # ======================================= RUN ==========================================
     def run(self):
         self.reactor.run(installSignalHandlers=False)
-
+       
     # ====================================== STOP ==========================================
     def stop(self):
         self.reactor.stop()

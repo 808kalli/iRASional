@@ -43,14 +43,19 @@ class periodicTask(task.LoopingCall):
             super().stop()
 
     def periodicCheck(self):
-        # Will create one of the following structures:
-        # {"reqORinfo": "req",  "type":"locsysDevice"}
-        # {"reqORinfo": "info", "type":"devicePos", "value1":x, "value2":y}
+        #Will create one of the following structures:
+        #{"reqORinfo": "req",  "type":"locsysDevice"}
+        #{"reqORinfo": "info", "type":"devicePos", "value1":x, "value2":y}
         # {"reqORinfo": "info", "type":"deviceRot", "value1": theta}
         # {"reqORinfo": "info", "type":"deviceSpeed", "value1":km/h}
         # {"reqORinfo": "info", "type":"historyData", "value1":id, "value2":x, "value3":y}
+        
+        # m = "locsysDevie"
+        # val = [] # 12.3 is a x example, 6.9 is a y example, Where position is measured in meters
+        # self.shrd_mem.insert(m, val)
 
         if self.tcp_factory.isConnected():
             tosend = self.shrd_mem.get()
             for mem in tosend:
                 self.tcp_factory.send_data_to_server(mem)
+            

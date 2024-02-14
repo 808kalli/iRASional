@@ -25,6 +25,16 @@ class threadGps(ThreadWithStop):
         self.debugger = debugger
         self.gps = Gps()
 
+        # Configure the Serial Port
+        self.ser = serial.Serial(
+            port="/dev/ttyACM0",\
+            baudrate=115200,\
+            parity=serial.PARITY_NONE,\
+            stopbits=serial.STOPBITS_ONE,\
+            bytesize=serial.EIGHTBITS,\
+            timeout=None)
+        print("connected to: " + self.ser.portstr)
+
 
 
     # =============================== STOP ================================================
@@ -42,20 +52,17 @@ class threadGps(ThreadWithStop):
     # ================================ RUN ================================================
     def run(self):
         """This function will run while the running flag is True"""
-
-
-        # Configure the Serial Port
-        ser = serial.Serial(
-            port="/dev/ttyACM1",\
-            baudrate=115200,\
-            parity=serial.PARITY_NONE,\
-            stopbits=serial.STOPBITS_ONE,\
-            bytesize=serial.EIGHTBITS,\
-            timeout=None)
-        print("connected to: " + ser.portstr)
-
         while self._running:
-            self.gps.update(ser)
+            coords = self.gps.update(self.ser)
+            if coords is not None:
+                self.queuesList[Location.Queue.value].put(      #send back coordinates
+                        {
+                            "Owner": Location.Owner.value,
+                            "msgID": Location.msgID.value,
+                            "msgType": Location.msgType.value,
+                            "msgValue": coords
+                        }
+                    )
 
 
 
