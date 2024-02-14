@@ -28,6 +28,8 @@
 import serial
 from src.templates.workerprocess import WorkerProcess
 from src.traffic_signs.threads.threadTraffic_Signs import threadTraffic_Signs
+from src.traffic_signs.threads.threadPedestrian import threadPedestrian
+from src.traffic_signs.threads.threadIndtersecDet import threadInterDet
 from multiprocessing import Pipe
 import time
 
@@ -62,3 +64,7 @@ class processTrafficSigns(WorkerProcess):
         """Initializes the read and the write thread."""
         signsTh = threadTraffic_Signs(self.queuesList, self.logger, self.debugging)
         self.threads.append(signsTh)
+        pedTh = threadPedestrian(self.queuesList, self.logger, self.debugging)
+        self.threads.append(pedTh)
+        threadInDet = threadInterDet(self.queuesList, self.logger, self.debugging) 
+        self.threads.append(threadInDet)

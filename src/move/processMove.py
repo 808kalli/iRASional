@@ -65,4 +65,3 @@ class processMove(WorkerProcess):
         time.sleep(0.5)         # wait for everything else to start first
         moveTh = threadMove(self.queuesList, self.logger, self.debugging)
         self.threads.append(moveTh)
-

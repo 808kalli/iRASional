@@ -88,8 +88,13 @@ if __name__ == "__main__":
     allProcesses = list()
     process = processCarsAndSemaphores(queueList)
     process.start()
-
     time.sleep(3)
-    print(queueList["General"].get())
+    while (True):
+        Semaphore = queueList["General"].get()
+        print(Semaphore)
+        if(Semaphore["msgID"]==2):
+            print(Semaphore["msgValue"]["state"])
+
+
 
     process.stop()

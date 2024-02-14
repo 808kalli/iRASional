@@ -87,14 +87,14 @@ class SingleConnection(protocol.Protocol):
                         "msgValue": dataJSON["value"],
                     }
                 )
-                print(
-                    {
-                        "Owner": EngineRun.Owner.value,
-                        "msgID": EngineRun.msgID.value,
-                        "msgType": EngineRun.msgType.value,
-                        "msgValue": True,
-                    }
-                )
+                # print(
+                #     {
+                #         "Owner": EngineRun.Owner.value,
+                #         "msgID": EngineRun.msgID.value,
+                #         "msgType": EngineRun.msgType.value,
+                #         "msgValue": True,
+                #     }
+                # )
             elif dataJSON["action"] == "brake":
                 self.factory.queues[Brake.Queue.value].put(
                     {

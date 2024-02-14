@@ -5,7 +5,7 @@ Brake,
 Record
 )
 
-def setSpeed(queuesList, speed=10):
+def setSpeed(queuesList, speed=15):
     print("#----- setting speed -----#")
     print("speed = ", speed)
     queuesList[SpeedMotor.Queue.value].put(
@@ -18,8 +18,8 @@ def setSpeed(queuesList, speed=10):
     )
     
 def steer(queuesList, angle):
-    print("#----- steering -----#")
-    print("angle =", angle)
+    # print("#----- steering -----#")
+    # print("angle =", angle)
     queuesList[SteerMotor.Queue.value].put(
     {
         "Owner": SteerMotor.Owner.value,
@@ -47,5 +47,14 @@ def start_recording(queuesList):
         "msgID": Record.msgID.value,
         "msgType": Record.msgType.value,
         "msgValue": True
+    }
+    )
+def stop_recording(queuesList):
+    queuesList[Record.Queue.value].put(
+    {
+        "Owner": Record.Owner.value,
+        "msgID": Record.msgID.value,
+        "msgType": Record.msgType.value,
+        "msgValue": False
     }
     )

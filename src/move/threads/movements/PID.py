@@ -1,30 +1,34 @@
 import time
-import cv2   as cv
 import numpy as np
-import math
 
 class PID:
-    def __init__(self, pidVals, targetVal, axis=0, limit=None):
+    def __init__(self, pidVals, targetVal, limits):
+        
         self.pidVals = pidVals
+        self.Kp = self.pidVals[0]
+        self.Ki = self.pidVals[1] 
+        self.Kd = self.pidVals[2]
+         
         self.targetVal = targetVal
-        self.axis = axis
         self.pError = 0
-        self.limit = limit
+        self.limits = limits
         self.I = 0
-        self.pTime = 0
+        self.D = 0
+        self.K = 0
+        self.pTime = time.time()
 
     def update(self, cVal):
-        # Current Value - Target Value
         t = time.time() - self.pTime
-        error = cVal #- self.targetVal
-        P = self.pidVals[0] * error
-        self.I = self.I + (self.pidVals[1] * error * t)
-        D = (self.pidVals[2] * (error - self.pError)) / t
+        error = self.targetVal - cVal
+        self.P = self.Kp * error
+        self.I = self.I + (self.Ki * error * t)
+        self.D = (self.Kd * (error - self.pError)) / t
 
-        result = P + self.I + D + self.targetVal
+        result = self.P + self.I + self.D
 
-        if self.limit is not None: #! if we have limitsremove if
-            result = float(np.clip(result, self.limit[0], self.limit[1]))
+        if self.limits is not None:
+            result = float(np.clip(result, self.limits[0], self.limits[1]))
+        result = round(result)
         self.pError = error
         self.ptime = time.time()
 

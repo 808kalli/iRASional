@@ -14,6 +14,6 @@ if ret == False:
     print(cap)
 else:
     # write frame to file
-    cv2.imwrite('image10.jpg', frame)
+    cv2.imwrite('image11.jpg', frame)
 # release camera
 cap.release()

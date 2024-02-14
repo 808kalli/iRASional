@@ -127,14 +127,14 @@ class threadRead(ThreadWithStop):
         elif buff[1] == '7':
             buff = buff[3:-2]
             splitedBuffer = buff.split(";")
-            if splitedBuffer[0] != "ack":
+            if ((splitedBuffer[0] != "ack") and (len(splitedBuffer) == 6)):
                 data = {
                     "roll": splitedBuffer[0],
                     "pitch": splitedBuffer[1],
                     "yaw": splitedBuffer[2],
                     "accelx": splitedBuffer[3],
                     "accely": splitedBuffer[4],
-                    # "accelz": splitedBuffer[5],
+                    "accelz": splitedBuffer[5],
                 }
                 self.queuesList[ImuData.Queue.value].put(
                     {

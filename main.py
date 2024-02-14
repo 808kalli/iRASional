@@ -55,7 +55,9 @@ from src.traffic_signs.processTraffic_Signs import processTrafficSigns
 
 from src.path_planning.processPathPlanning import processPathPlanning
 
-from src.intersection_det.processIntersecDet import processIntersecDet
+from src.kalman.processKalman import processKalman
+
+from src.gps.processGps import processGps
 
 # ======================================== SETTING UP ====================================
 allProcesses = list()
@@ -69,15 +71,16 @@ queueList = {
 logging = logging.getLogger()
 
 TrafficCommunication = False
-Camera = True
+Camera = False
 PCCommunicationDemo = False
 PCCommunicationDashBoard = False
 CarsAndSemaphores = False
 SerialHandler = False
 Signs_Detection = False
-InterDet = True
 PathPlanning = False
-Move = True
+Gps= True
+Kalman = False
+Move = False
 # ===================================== SETUP PROCESSES ==================================
 
 # Initializing gateway
@@ -94,9 +97,7 @@ if PCCommunicationDemo:
     processPCCommunication = processPCCommunicationDemo(queueList, logging)
     allProcesses.append(processPCCommunication)
 elif PCCommunicationDashBoard:
-    processPCCommunicationDashBoard = processPCCommunicationDashBoard(
-        queueList, logging
-    )
+    processPCCommunicationDashBoard = processPCCommunicationDashBoard(queueList, logging)
     allProcesses.append(processPCCommunicationDashBoard)
 
 # Initializing cars&sems
@@ -113,10 +114,6 @@ if PathPlanning:
     processPathPlanning = processPathPlanning(queueList, logging)
     allProcesses.append(processPathPlanning)
 
-if InterDet:
-    processIntersecDet = processIntersecDet(queueList, logging)
-    allProcesses.append(processIntersecDet)
-
 # Initializing serial connection NUCLEO --> PI
 if SerialHandler:
     processSerialHandler = processSerialHandler(queueList, logging)
@@ -126,6 +123,16 @@ if SerialHandler:
 if Signs_Detection:
     processTraffic_Signs = processTrafficSigns(queueList, logging)
     allProcesses.append(processTraffic_Signs)
+
+#Initializing Gps filter for localization
+if Gps:
+    processGps = processGps(queueList, logging)
+    allProcesses.append(processGps)
+
+#Initializing Kalman filter for localization
+if Kalman:
+    processKalman = processKalman(queueList, logging)
+    allProcesses.append(processKalman)
 
 # Initializing the process for decision making
 if Move:

@@ -38,6 +38,9 @@ mainCamera
 )
 from src.templates.threadwithstop import ThreadWithStop
 from src.traffic_signs.TrafficSigns import TrafficSignDetection
+from src.utils.messages.allMessages import (
+TrafficSign
+)
 
 
 class threadTraffic_Signs(ThreadWithStop):
@@ -88,6 +91,19 @@ class threadTraffic_Signs(ThreadWithStop):
 
     # ================================ RUN ================================================
     def run(self):
+        traffic_signs = {
+            "Stop": 0,
+            "Priority": 0,
+            "Crosswalk": 0,
+            "Parking": 0,
+            "no entry": 0,
+            "no sign": 0,
+            "one way": 0,
+            "highway_entry": 0,
+            "highway_exit" : 0,
+            "roundabout" : 0
+            
+        }
         while self._running:
             #print("working")
             if self.pipeRecvcamera_signs.poll():
@@ -96,7 +112,28 @@ class threadTraffic_Signs(ThreadWithStop):
                 img = np.frombuffer(image_data, dtype=np.uint8)
                 image = cv2.imdecode(img, cv2.IMREAD_COLOR)
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-                cv2.imwrite("received.jpg",image)
+                # cv2.imwrite("received.jpg",image)
                 detected, sign = TrafficSignDetection(image)
-                print("detected:", detected, "sign", sign)
+                # print("detected:", detected, "sign:", sign)
+                if detected:
+                    traffic_signs[sign] = traffic_signs[sign]+1
+                    # print(sign, traffic_signs[sign])
+                    if (traffic_signs[sign] >= 3) or ((sign =="Crosswalk" or sign == "roundabout")and traffic_signs[sign]>=2):
+                        # print("seen", sign)
+                        self.queuesList[TrafficSign.Queue.value].put(
+                            {
+                                "Owner": TrafficSign.Owner.value,
+                                "msgID": TrafficSign.msgID.value,
+                                "msgType": TrafficSign.msgType.value,
+                                "msgValue": sign
+                            }
+                        )
+                        for sign in traffic_signs:
+                            traffic_signs[sign] = 0
+                else:
+                    # print("no sign")
+                    traffic_signs["no sign"] = traffic_signs["no sign"] + 1
+                    if traffic_signs["no sign"] == 10:
+                        for sign in traffic_signs:
+                            traffic_signs[sign] = 0
                 self.pipeRecvcamera_signs.send("ready")

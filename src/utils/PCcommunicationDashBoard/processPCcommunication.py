@@ -44,7 +44,7 @@ class processPCCommunicationDashBoard(WorkerProcess):
     def __init__(self, queueList, logging):
         self.queuesList = queueList
         self.logging = logging
-        pipeRecv, pipeSend = Pipe(duplex=False)
+        pipeRecv, pipeSend = Pipe()
         self.pipeRecv = pipeRecv
         self.pipeSend = pipeSend
         super(processPCCommunicationDashBoard, self).__init__(self.queuesList)

@@ -101,14 +101,21 @@ class threadGateway(ThreadWithStop):
         if (Owner, Id) in self.messageApproved:
             for element in self.sendingList[Owner][Id]:
                 # We send a dictionary that contain the type of the message and message
-                # print(self.sendingList)
+                # print(self.sendingList[Owner])         
                 # print(element)
-                # print(self.sendingList[Owner][Id])
                 if self.sendingList[Owner][Id][element].poll():
                     response = self.sendingList[Owner][Id][element].recv()
                     self.sendingList[Owner][Id][element].send(
                         {"Type": Type, "value": Value, "id": Id, "Owner": Owner}
-                    )
+                        )
+                elif element == "threadRemoteHandler":
+                    self.sendingList[Owner][Id][element].send(
+                        {"Type": Type, "value": Value, "id": Id, "Owner": Owner}
+                        )
+                elif Owner == "threadRemoteHandler":
+                    self.sendingList[Owner][Id][element].send(
+                        {"Type": Type, "value": Value, "id": Id, "Owner": Owner}
+                        )
                 # else:
                 if self.debugging:
                     self.logger.warning(message)

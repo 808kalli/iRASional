@@ -97,7 +97,15 @@ if __name__ == "__main__":
     traffic_communication = threadTrafficCommunication(
         shared_memory, queueList, deviceID, filename
     )
+    print("yes")
     traffic_communication.start()
-    time.sleep(6)
+    time.sleep(3)
+    #print(shared_memory.get())
     print(queueList["General"].get())
+    m = "deviceSpeed"
+
+    val = [0.2] # 0.2 is a speed example, Where speed is measured in cm/s
+
+    shared_memory.insert(m, val)
+
     traffic_communication.stop()

@@ -99,4 +99,4 @@ class WorkerProcess(Process):
         """
 
         self._blocker.set()
-        time.sleep(2)
+        time.sleep(1)

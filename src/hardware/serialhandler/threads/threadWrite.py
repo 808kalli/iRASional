@@ -74,7 +74,7 @@ class threadWrite(ThreadWithStop):
         self.pipeRecvRunningSignal = pipeRecvRunningSignal
         self.pipeSendRunningSignal = pipeSendRunningSignal
         self.subscribe()
-        #self.Queue_Sending()
+        self.Queue_Sending()
         if example:
             self.i = 0.0
             self.j = -1.0
@@ -85,7 +85,7 @@ class threadWrite(ThreadWithStop):
         self.pipeRecvSpeed.send("ready")
         self.pipeRecvSteer.send("ready")
         
-        # uncomment to get data for the battery level
+        # # uncomment to get data for the battery level
         
         # command = {"action": "5", "activate": True}
         # command_msg = self.messageConverter.get_command(**command)
@@ -105,6 +105,15 @@ class threadWrite(ThreadWithStop):
         command_msg = self.messageConverter.get_command(**command)
         self.serialCom.write(command_msg.encode("ascii"))
         self.logFile.write(command_msg)
+        
+        # uncomment to get ultrasonic
+        
+        # command = {"action": "8", "activate": True}
+        # command_msg = self.messageConverter.get_command(**command)
+        # self.serialCom.write(command_msg.encode("ascii"))
+        # self.logFile.write(command_msg)
+        
+        
 
 
     def subscribe(self):

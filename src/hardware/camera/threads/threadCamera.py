@@ -68,7 +68,7 @@ class threadCamera(ThreadWithStop):
         self.video_writer = ""
         self.subscribe()
         self._init_camera()
-        self.Queue_Sending()
+        # self.Queue_Sending()
         self.Configs()
         self.pipeRecvConfig.send("ready")
         self.pipeRecvRecord.send("ready")
@@ -139,6 +139,7 @@ class threadCamera(ThreadWithStop):
                     self.recording = msg["value"]
                     if msg["value"] == False:
                         self.video_writer.release()
+                        print("#----- stopped recording pov video -----#")
                     else:
                         print("#----- started recording pov video -----#")
                         fourcc = cv2.VideoWriter_fourcc(
@@ -150,6 +151,7 @@ class threadCamera(ThreadWithStop):
                             self.frame_rate,
                             (2048, 1080),
                         )
+                    self.pipeRecvRecord.send("ready")
             except Exception as e:
                 print(e)
             if self.debugger == True:

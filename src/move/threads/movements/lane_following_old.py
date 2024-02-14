@@ -14,7 +14,7 @@ SteerAngleStep = 3.0 # can change later
 SpeedStep = 4.0 # can change later
 currSpeed = 0.0 # start value of speed, changes with setSpeed
 
-kp1 = 0.81  #working value: 0.081 //FOR SPEED 17-30: 0.081
+kp1 = 0.081  #working value: 0.081 //FOR SPEED 17-30: 0.081
 kd1 = 0.042  #working value: 0.042  //FOR SPEED 17-27: 0.042
 ki = 0
 
@@ -228,8 +228,8 @@ def pipeline(binary_warped,undist_image, Minv): #in final form pipeline will onl
     return error
 
 def followLane(frame, queue, queuesList, flag, speed = 15):
-    x1PID = PID([kp1,ki,kd1], offset , axis=1, limit=[-22, 22])
-    x2PID = PID([kp2,ki,kd2], offset , axis=1, limit=[-7.5, 7.5])
+    x1PID = PID([kp1,ki,kd1], offset ,[-22, 22])
+    x2PID = PID([kp2,ki,kd2], offset , [-7.5, 7.5])
     try:
         img = frame
         img = ROI(img, 0.7)
@@ -252,9 +252,9 @@ def followLane(frame, queue, queuesList, flag, speed = 15):
         # pidCorrection = curr_pidCorrection
 
         if (flag == True):
-            print(pidCorrection)
-            steer(queuesList, pidCorrection)
-            setSpeed(queuesList, speed)
+            # print(pidCorrection)
+            steer(queuesList, -pidCorrection)
+            # setSpeed(queuesList, speed)
             flag = False
         else:
             pass

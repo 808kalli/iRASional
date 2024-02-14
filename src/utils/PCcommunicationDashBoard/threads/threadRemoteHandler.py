@@ -34,6 +34,12 @@ from src.utils.messages.allMessages import (
     Location,
     mainCamera,
     Signal,
+    SteerMotor,
+    SpeedMotor,
+    LaneError,
+    BatteryLvl,
+    Brake
+    
 )
 from twisted.internet import reactor
 
@@ -108,7 +114,47 @@ class threadRemoteHandler(ThreadWithStop):
                 "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
             }
         )
-
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": SpeedMotor.Owner.value,
+        #         "msgID": SpeedMotor.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": SteerMotor.Owner.value,
+        #         "msgID": SteerMotor.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": BatteryLvl.Owner.value,
+        #         "msgID": BatteryLvl.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": LaneError.Owner.value,
+        #         "msgID": LaneError.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
+        # self.queues["Config"].put(
+        #     {
+        #         "Subscribe/Unsubscribe": "subscribe",
+        #         "Owner": Brake.Owner.value,
+        #         "msgID": Brake.msgID.value,
+        #         "To": {"receiver": "threadRemoteHandler", "pipe": pipeSend},
+        #     }
+        # )
+        
     # ===================================== RUN ======================================
     def run(self):
         self.task.start()

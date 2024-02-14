@@ -46,13 +46,16 @@ def getContours(img,imgContour):
     for cnt in contours:
         area = cv2.contourArea(cnt)
         #print(area)
-        if area>600: #600 #1300
+        if area>550: #600 #1300
             cv2.drawContours(imgContour, cnt, -1, (255, 0, 0), 3)
+            hull = cv2.convexHull(cnt, returnPoints=False)
+            sides = len(hull)
             peri = cv2.arcLength(cnt,True)
             #print(peri)
             approx = cv2.approxPolyDP(cnt,0.02*peri,True)
             #print(len(approx))
             objCor = len(approx)
+            # print(objCor)
             x, y, w, h = cv2.boundingRect(approx)
 
             if objCor ==3: objectType ="Tri"
@@ -60,7 +63,9 @@ def getContours(img,imgContour):
                 aspRatio = w/float(h)
                 if aspRatio >0.98 and aspRatio <1.03: objectType= "Square"
                 else:objectType="Rectangle"
-            elif objCor>4 and objCor<9: objectType= "Hexagon"
+            elif objCor == 5 : objectType = "Pentagon"
+            elif objCor == 7: objectType = "Arrow"
+            elif objCor == 8: objectType = "Hexagon"
             elif objCor>=9 : objectType= "Circles"
             else:objectType="None"
 
@@ -70,7 +75,7 @@ def getContours(img,imgContour):
             cv2.putText(imgContour,objectType,
                         (x+(w//2)-10,y+(h//2)-10),cv2.FONT_HERSHEY_COMPLEX,0.7,
                         (0,0,0),2)
-            return x,y,w,h,objectType
+            return x,y,w,h,objectType,area,sides
 
 
 
@@ -88,7 +93,9 @@ def TrafficSignDetection(img):
         dimensions = img.shape
         h = int(dimensions[0])
         w = int(dimensions[1])
-        img = img[0: int(h/2) , int(w/2):w] #int(h/6): int(h/2) , int(w/2.5):w (for avi), 0: int(h/2) , int(w/2):w (for mp4)
+        #img = img[int(h/6): int(h/2.7) , int(w/2.4):int(w/1.2) ]
+        img = img[int(h/5): int(h/2.6) , int(w/2.4):int(w/1) ]
+        #img = img[0: int(h/2.2) , int(w/2.2):w] #int(h/6): int(h/2) , int(w/2.5):w (for avi), 0: int(h/2) , int(w/2):w (for mp4)
         #cv2.imwrite("image.jpg",img)
         imgContour = img.copy()
         #cv2.imshow("ss", imgContour)
@@ -96,8 +103,8 @@ def TrafficSignDetection(img):
         imgGray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         imgBlur = cv2.GaussianBlur(imgGray,(7,7),1)
         imgCanny = cv2.Canny(imgBlur,60,70)
-        x,y,w,h,shape = getContours(imgCanny,imgContour)
-        print(shape)
+        x,y,w,h,shape,area,sides= getContours(imgCanny,imgContour)
+        # print(shape)
 
         imgBlank = np.zeros_like(img)
         #imgStack = stackImages(0.7,([img,imgGray,imgBlur], [imgCanny,imgContour,imgBlank]))
@@ -116,91 +123,138 @@ def TrafficSignDetection(img):
         imgHSV = cv2.cvtColor(img_cropped,cv2.COLOR_BGR2HSV)
         color = "None"
         #------RED MASK--------
-        lower = np.array([124,90,75]) #[124,90,75] , [0,79,97]
-        upper = np.array([179,213,171]) #[179,213,171], [179,205,185]
+        #lower = np.array([124,90,75]) #[124,90,75] , [0,79,97]
+        #upper = np.array([179,213,171]) #[179,213,171], [179,205,185]
+        lower = np.array([124,90,60]) #[124,90,75] , [0,79,97]
+        upper = np.array([179,255,220]) #[179,213,171], [179,205,185]
         red_mask = cv2.inRange(imgHSV,lower,upper)
         red_imgResult = cv2.bitwise_and(img_cropped,img_cropped,mask=red_mask)
         #print(imgResult.size)
 
         #detect color
+        red_color = False
+        red_line = False
         number_of_black_pix = np.sum(red_imgResult == 0)
-        if number_of_black_pix<red_imgResult.size-2000:
-            print("black",number_of_black_pix)
-            print("red:",red_imgResult.size)
-            color ="red"
+        if number_of_black_pix<red_imgResult.size-800:
+            # print("black",number_of_black_pix)
+            # print("red:",red_imgResult.size)
+            red_color = True
+            red_line = True
+        
+        elif number_of_black_pix<red_imgResult.size-200:
+            red_line = True
+        
 
         # ------BLUE MASK--------
-        lower = np.array([105, 176, 33]) #[109, 205, 22]
-        upper = np.array([141, 218, 137]) # [114, 232, 208]
+        #lower = np.array([105, 176, 33]) #[109, 205, 22]
+        #upper = np.array([141, 218, 137]) # [114, 232, 208]
+        lower = np.array([70, 141, 35]) # for pov
+        upper = np.array([141, 255, 160]) # for pov
         blue_mask = cv2.inRange(imgHSV, lower, upper)
         blue_imgResult = cv2.bitwise_and(img_cropped, img_cropped, mask=blue_mask)
+        cv2.imwrite("blue_mask.jpg",blue_imgResult)
         # print(imgResult.size)
 
         # detect color
+        blue_color = False
         number_of_black_pix = np.sum(blue_imgResult == 0)
         if number_of_black_pix < blue_imgResult.size-1000:
-            color = "blue"
+            blue_color = True
+            
 
         #------YELLOW MASK--------
-        lower = np.array([16,89,100]) #[9,71,140]
+        #lower = np.array([21,56,127]) #16,89,100]
+        #upper = np.array([66,99,169]) #[55,246,181]
+        lower = np.array([10,89,85]) #[9,71,140]
         upper = np.array([55,246,181]) #[71,163,250]
         yellow_mask = cv2.inRange(imgHSV,lower,upper)
         yellow_imgResult = cv2.bitwise_and(img_cropped,img_cropped,mask=yellow_mask)
         #print(yellow_imgResult.size)
 
         #detect color
+        yellow_color = False
         number_of_black_pix = np.sum(yellow_imgResult == 0)
         #print("black",number_of_black_pix)
-        if number_of_black_pix<yellow_imgResult.size - 1000:
-            color ="yellow"
+        if number_of_black_pix<yellow_imgResult.size - 800:
+            yellow_color = True
         
-        ''' 
+      
         #------GREEN MASK--------
-        lower = np.array([16,89,100]) #[9,71,140]
-        upper = np.array([55,246,181]) #[71,163,250]
+        lower = np.array([45,70,30]) #[9,71,140]
+        upper = np.array([100,255,200]) #[71,163,250]
         green_mask = cv2.inRange(imgHSV,lower,upper)
         green_imgResult = cv2.bitwise_and(img_cropped,img_cropped,mask=green_mask)
         #print(green_imgResult.size)
 
         #detect color
+        green_color = False
         number_of_black_pix = np.sum(green_imgResult == 0)
+        #print("green", number_of_black_pix,green_imgResult.size)
         #print("black",number_of_black_pix)
-        if number_of_black_pix<green_imgResult.size - 2000:
-            color ="green"
-        '''
-
+        if number_of_black_pix<green_imgResult.size - 800:
+            green_color = True
+        
         sign = "None"
 
-        if(shape=="Hexagon" and color=="red"):
+        if(shape=="Hexagon" and  red_color==True):
             print("Stop")
             sign = "Stop"
             Found = True
             cv2.putText(imgContour, "Stop",
                         (x + (w // 2) +10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
                         (0, 0, 0), 2)
-        elif(shape=="Tri" and color=="blue"):
+        elif((shape=="Tri" or shape == "Pentagon")and blue_color==True and area>1000):
             print("Crosswalk")
             sign = "Crosswalk"
             Found = True
             cv2.putText(imgContour, "Crosswalk",
                         (x + (w // 2) + 10, y + (h // 2) - 70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
                         (0, 0, 0), 2)
-        elif(shape=="Hexagon" and color=="blue"):
+        elif((shape=="Hexagon" or shape == "Arow" ) and blue_color == True and sides>15):
             print("Parking")
             sign = "Parking"
             Found = True
             cv2.putText(imgContour, "parking",
                         (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
                         (0, 0, 0), 2)
-        elif((shape=="Rectangle" or shape =="Square" or shape =="Hexagon") and color=="yellow"):
+        elif((shape=="Rectangle" or shape =="Square") and yellow_color== True):
             print("Priority")
             sign = "Priority"
             Found = True
             cv2.putText(imgContour, "prioriy",
                         (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
                         (0, 0, 0), 2)
-        elif (shape == "Rectangle" and color == "red"):
-            print("no entry")
+        elif ((shape == "Rectangle" or shape == "Pentagon") and green_color == True and red_line == False):
+            print("highway_entry")
+            sign = "highway_entry"
+            Found = True
+            cv2.putText(imgContour, "highway_entry",
+                        (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
+                        (0, 0, 0), 2)
+        
+        elif ((shape == "Rectangle" or shape =="Pentagon") and green_color == True and red_line == True):
+            print("highway_exit")
+            sign = "highway_exit"
+            Found = True
+            cv2.putText(imgContour, "highway_exit",
+                        (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
+                        (0, 0, 0), 2)
+        
+        elif (shape == "Arrow" and blue_color == True and sides<15):
+            print("one way")
+            sign = "one way"
+            Found = True
+            cv2.putText(imgContour, "one way",
+                        (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
+                        (0, 0, 0), 2)
+        
+        elif (shape == "Circles" and blue_color == True and area<3000):
+            print("roundabout")
+            sign = "roundabout"
+            Found = True
+            cv2.putText(imgContour, "roundabout",
+                        (x + (w // 2) + 10, y + (h // 2) -70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
+                        (0, 0, 0), 2)
 
 
     #imgStack = stackImages(0.8,([img_cropped,imgHSV],[red_mask,red_imgResult],[blue_mask,blue_imgResult],[yellow_mask,yellow_imgResult]))

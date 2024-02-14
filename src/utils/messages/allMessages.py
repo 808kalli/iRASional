@@ -72,10 +72,9 @@ class Semaphores(Enum):
     msgType = "String"
 
 
-################################# From PC ##################################
+################################# From Move ##################################
 class EngineRun(Enum):
     Queue = "General"
-    #Owner = "threadRemoteHandler"
     Owner = "threadMove"
     msgID = 1
     msgType = "dictionary"
@@ -86,7 +85,6 @@ class EngineRun(Enum):
 
 class SpeedMotor(Enum):
     Queue = "General"
-    # Owner = "threadRemoteHandler"
     Owner = "threadMove"
     msgID = 2
     msgType = "dictionary"
@@ -97,7 +95,6 @@ class SpeedMotor(Enum):
 
 class SteerMotor(Enum):
     Queue = "General"
-    # Owner = "threadRemoteHandler"
     Owner = "threadMove"
     msgID = 3
     msgType = "dictionary"
@@ -115,7 +112,6 @@ class Control(Enum):
 
 class Brake(Enum):
     Queue = "General"
-    # Owner = "threadRemoteHandler"
     Owner = "threadMove"
     msgID = 5
     msgType = "dictionary"
@@ -127,7 +123,6 @@ class Brake(Enum):
 
 class Record(Enum):
     Queue = "General"
-    # Owner = "threadRemoteHandler"
     Owner = "threadMove"
     msgID = 6
     msgType = "dictionary"
@@ -140,6 +135,23 @@ class Config(Enum):
     Queue = "General"
     Owner = "threadRemoteHandler"
     msgID = 7
+    msgType = "dictionary"
+
+
+# {"action": key, "value": value}
+
+class LaneError(Enum):
+    Queue = "General"
+    Owner = "threadMove"
+    msgID = 8
+    msgType = "dictionary"
+
+################################# From Remote Handler ##################################
+
+class MoveConfig(Enum):
+    Queue = "General"
+    Owner = "threadRemoteHandler"
+    msgID = 1
     msgType = "dictionary"
 
 
@@ -172,6 +184,20 @@ class InterDistance(Enum):
     Queue = "General"
     Owner = "threadInterDet"
     msgID = 11
+    msgType = "dictionary"
+
+#=========================FOR KALMAN FILTER========================
+
+class CalcPos(Enum):
+    Queue = "General"
+    Owner = "theadMove"
+    msgID = 12
+    msgType = "dictionary"
+
+class Pos(Enum):
+    Queue = "General"
+    Owner = "threadKalman"
+    msgID = 13
     msgType = "dictionary"
 
 ################################# From Nucleo ##################################
@@ -220,3 +246,18 @@ class SignalRunning(Enum):
     Owner = "threadWrite"
     msgID = 2
     msgType = "Boolean"
+    
+
+################################# From Vision ##################################
+
+class TrafficSign(Enum):
+    Queue = "General"
+    Owner = "threadTraffic_Signs"
+    msgID = 1
+    msgType = "string"
+
+class Pedestrian(Enum):
+    Queue = "General"
+    Owner = "threadPedestrian"
+    msgID = 1
+    msgType = "boolean"

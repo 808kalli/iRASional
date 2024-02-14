@@ -30,7 +30,11 @@ import json
 from src.utils.messages.allMessages import (
     EngineRun,
     SpeedMotor,
-    Config,
+    MoveConfig,
+    SteerMotor,
+    BatteryLvl,
+    LaneError,
+    Brake
 )
 
 
@@ -72,7 +76,7 @@ class SingleConnection(protocol.Protocol):
                 self.factory.connection = None
         else:
             dataJSON = json.loads(data.decode())
-            print(dataJSON)
+            # print(dataJSON)
             if dataJSON["action"] == "startEngine":
                 self.factory.queues[EngineRun.Queue.value].put(
                     {
@@ -82,13 +86,13 @@ class SingleConnection(protocol.Protocol):
                         "msgValue": dataJSON["value"],
                     }
                 )
-            elif dataJSON["action"] == "Brightness":
-                self.factory.queues[Config.Queue.value].put(
+            elif (dataJSON["action"] == "speed" or dataJSON["action"] == "K_value" or dataJSON["action"] == "recording" or dataJSON["action"] == "autonomous"):
+                self.factory.queues[MoveConfig.Queue.value].put(
                     {
-                        "Owner": Config.Owner.value,
-                        "msgID": Config.msgID.value,
-                        "msgType": Config.msgType.value,
-                        "msgValue": dataJSON,
+                        "Owner": MoveConfig.Owner.value,
+                        "msgID": MoveConfig.msgID.value,
+                        "msgType": MoveConfig.msgType.value,
+                        "msgValue": dataJSON
                     }
                 )
             # print("Received from", self.factory.connectiondata, " : ", data.decode())
@@ -150,6 +154,39 @@ class FactoryDealer(protocol.Factory):
                 mainCamera.Owner.value,
                 mainCamera.msgID.value,
             ): 5,
+            # (
+            #     Alerts.msgType.value,
+            #     Alerts.Owner.value,
+            #     Alerts.msgID.value,
+            # ): 6,
+            # (
+            #     SpeedMotor.msgType.value,
+            #     SpeedMotor.Owner.value,
+            #     SpeedMotor.msgID.value,
+            # ): 7,
+            
+            # (
+            #     Brake.msgType.value,
+            #     Brake.Owner.value,
+            #     Brake.msgID.value,
+            # ): 7,
+            
+            # (
+            #     BatteryLvl.msgType.value,
+            #     BatteryLvl.Owner.value,
+            #     BatteryLvl.msgID.value,
+            # ): 8,
+            # (
+            #     LaneError.msgType.value,
+            #     LaneError.Owner.value,
+            #     LaneError.msgID.value,
+            # ): 9,
+            # (
+            #     SteerMotor.msgType.value,
+            #     SteerMotor.Owner.value,
+            #     SteerMotor.msgID.value,
+            # ): 10,
+                
         }
 
     def send_data_to_client(self, messageValue, messageType, messageOwner, messageId):
