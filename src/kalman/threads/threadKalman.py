@@ -2,6 +2,7 @@ import threading
 import base64
 import time
 import numpy as np
+import logging
 
 import src.kalman.threads.Kalman as Kalman 
 
@@ -99,8 +100,8 @@ class threadKalman(ThreadWithStop):
         
         #initial values
         dt = 0.1        #time interval
-        x_x = 2.0         #initial x position
-        x_y = 2.4         #initial y position
+        x_x = 5         #initial x position
+        x_y = 0         #initial y position
         u0_x = 0        #initial x velocity
         u0_y = 0        #initial y velocity
         a_x = 0         #initial x acceleration
@@ -111,8 +112,8 @@ class threadKalman(ThreadWithStop):
         s_a_y = 1e-2
 
         #GPS observation covarriance
-        s_x = 1e-4
-        s_y = 1e-4
+        s_x = 1e-1
+        s_y = 1e-1
 
         P = np.array([[1e-10, 1e-10, 1e-10, 1e-10],
                     [1e-10, 1e-10, 1e-10, 1e-10],
@@ -143,7 +144,8 @@ class threadKalman(ThreadWithStop):
 
         R = np.array([[s_x**2, 0],
                     [0, s_y**2]])
-        
+        logging.basicConfig(filename='coordinates.log', level=logging.INFO, format='%(message)s')
+
         while self._running:
             if self.pipeRecvCalcPos.poll():
                 self.initiate = self.pipeRecvCalcPos.recv()
@@ -157,7 +159,7 @@ class threadKalman(ThreadWithStop):
 
                             x, P = Kalman.predict(x, F, G, accel, P, Q)         #predict new state
 
-                            x_imu = (x[0], x[1])
+                            print(f"accel x: {a_x} | accel y: {a_y} | vel x: {x[2]} | vel y: {x[3]} | x: {x[0]} | y: {x[1]}")
 
                             self.pipeRecvIMUReading.send("ready")
 
@@ -165,9 +167,6 @@ class threadKalman(ThreadWithStop):
                             self.pos = self.pipeRecvGPSReading.recv()['value']/1000
 
                             x, P = Kalman.update(x, self.pos, H, P, R)          #update state
-
-                            # print(f"IMU: {x_imu} | GPS: {self.pos} | KALMAN: {(x[0], x[1])}")         #print values
-
 
                             self.pipeRecvGPSReading.send("ready")
 
@@ -178,6 +177,6 @@ class threadKalman(ThreadWithStop):
                                 "Owner": Pos.Owner.value,
                                 "msgID": Pos.msgID.value,
                                 "msgType": Pos.msgType.value,
-                                "msgValue": coordinates
+                                "msgValue": [coordinates, (self.pos[0], self.pos[1])]
                             }
                         )

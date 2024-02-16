@@ -264,6 +264,8 @@ class threadMove(ThreadWithStop):
             }   
         )
 
+        viz = []
+
         
         while self._running:
             # ========== check if engine button is pressed ==========#
@@ -407,31 +409,38 @@ class threadMove(ThreadWithStop):
 
                     #========================LOCALIZATION==========================================
 
-                    try:
-                        if self.pipeRecvcamera_lf.poll():
-                            frame = self.pipeRecvcamera_lf.recv()
-                            image_data = base64.b64decode(frame["value"])
-                            img = np.frombuffer(image_data, dtype=np.uint8)
-                            image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-                            cv2.imwrite("test.jpg", image)
-                            angle = lf.followLane(image, self.K, self.speed)
-                            if angle is not None:
-                                angle = np.clip(angle, -25, 25)
-                                steer(self.queuesList, angle)
-                            self.pipeRecvcamera_lf.send("ready")
+                    # try:
+                    #     if self.pipeRecvcamera_lf.poll():
+                    #         frame = self.pipeRecvcamera_lf.recv()
+                    #         image_data = base64.b64decode(frame["value"])
+                    #         img = np.frombuffer(image_data, dtype=np.uint8)
+                    #         image = cv2.imdecode(img, cv2.IMREAD_COLOR)
+                    #         cv2.imwrite("test.jpg", image)
+                    #         angle = lf.followLane(image, self.K, self.speed)
+                    #         if angle is not None:
+                    #             angle = np.clip(angle, -25, 25)
+                    #             steer(self.queuesList, angle)
+                    #         self.pipeRecvcamera_lf.send("ready")
 
-                        if self.pipeRecvPos.poll():
-                            coordinates = self.pipeRecvPos.recv()['value']
-                            print(coordinates)
-                            self.pipeRecvPos.send("ready")
+                    #     if self.pipeRecvPos.poll():
+                    #         coordinates = self.pipeRecvPos.recv()['value']
+                    #         print(coordinates)
 
-                    except:
-                        logging.exception("Error in Thread Move", exc_info=True)
-                        print("error")
-                        if self.pipeRecvcamera_lf.poll():
-                            self.pipeRecvcamera_lf.recv()
-                        self.pipeRecvcamera_lf.send("ready")
-                        
+                    #         # Define the file name
+                    #         file_name = "coordinates.txt"
+
+                    #         # Open the file in write mode
+                    #         with open(file_name, 'w') as file:
+                    #             file.write(str(coordinates) + '\n')
+
+                    #         self.pipeRecvPos.send("ready")
+
+                    # except:
+                    #     logging.exception("Error in Thread Move", exc_info=True)
+                    #     print("error")
+                    #     if self.pipeRecvcamera_lf.poll():
+                    #         self.pipeRecvcamera_lf.recv()
+                    #     self.pipeRecvcamera_lf.send("ready")
                     
 
                         
@@ -454,3 +463,19 @@ class threadMove(ThreadWithStop):
                     #         print("Current path: ", path['value'])
                     #         self.pipeRecvPathPlanning.send("ready")
                     #         break
+
+                    if self.pipeRecvPos.poll():
+                        coordinates, (pos_x, pos_y) = self.pipeRecvPos.recv()['value']
+                        # print(coordinates)
+                        viz.append((coordinates, (pos_x, pos_y)))
+
+                        # Define the file name
+                        file_name = "coordinates.txt"
+
+                        with open(file_name, 'w') as file:
+                            # Iterate over each tuple in coordinates
+                            for coord in viz:
+                                # Convert the tuple to a string and write it to the file followed by a newline
+                                file.write(str(coord) + '\n')
+
+                        self.pipeRecvPos.send("ready")
