@@ -8,7 +8,7 @@ import src.kalman.threads.Kalman as Kalman
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
-    CalcPos,
+    CurrentSpeed,
     Pos,
     Location,
     ImuData
@@ -23,17 +23,17 @@ class threadKalman(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
-        pipeRecvCalcPos, pipeSendCalcPos = Pipe()
+        pipeRecvCurrentSpeed, pipeSendCurrentSpeed = Pipe()
         pipeRecvIMUReading, pipeSendIMUReading = Pipe()
         pipeRecvGPSReading, pipeSendGPSReading = Pipe()
         self.pipeRecvGPSReading = pipeRecvGPSReading
         self.pipeSendGPSReading = pipeSendGPSReading
         self.pipeRecvIMUReading = pipeRecvIMUReading
         self.pipeSendIMUReading = pipeSendIMUReading
-        self.pipeRecvCalcPos = pipeRecvCalcPos
-        self.pipeSendCalcPos = pipeSendCalcPos
+        self.pipeRecvCurrentSpeed = pipeRecvCurrentSpeed
+        self.pipeSendCurrentSpeed = pipeSendCurrentSpeed
         self.subscribe()
-        self.pipeRecvCalcPos.send("ready")   #send ready flag through pipe
+        self.pipeRecvCurrentSpeed.send("ready")   #send ready flag through pipe
         self.pipeRecvIMUReading.send("ready")
         self.pipeRecvGPSReading.send("ready")
 
@@ -42,9 +42,9 @@ class threadKalman(ThreadWithStop):
         self.queuesList["Config"].put(
             {
                 "Subscribe/Unsubscribe": "subscribe",
-                "Owner": CalcPos.Owner.value,
-                "msgID": CalcPos.msgID.value,
-                "To": {"receiver": "threadPathPlanning", "pipe": self.pipeSendCalcPos},
+                "Owner": CurrentSpeed.Owner.value,
+                "msgID": CurrentSpeed.msgID.value,
+                "To": {"receiver": "threadPathPlanning", "pipe": self.pipeSendCurrentSpeed},
             }
         )
 
@@ -100,83 +100,68 @@ class threadKalman(ThreadWithStop):
         
         #initial values
         dt = 0.1        #time interval
-        x_x = 5         #initial x position
+        x_x = 0         #initial x position
         x_y = 0         #initial y position
-        u0_x = 0        #initial x velocity
-        u0_y = 0        #initial y velocity
-        a_x = 0         #initial x acceleration
-        a_y = 0         #initial y acceleration
 
         #IMU acceleration covarriance
-        s_a_x = 1e-2
-        s_a_y = 1e-2
+        s_phi = 1e-2
 
         #GPS observation covarriance
         s_x = 1e-1
         s_y = 1e-1
 
-        P = np.array([[1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10]])
+        P = np.array([[1e-10, 1e-10],
+                      [1e-10, 1e-10]])
 
-        accel = np.array([a_x, a_y])
+        x = np.array([x_x, x_y])
 
-        x = np.array([x_x, x_y, u0_x, u0_y])
+        v = np.array([0, 0])
 
-        F = np.array([[1, 0, dt, 0],
-                    [0, 1, 0, dt],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]])
+        F = np.array([[1, 0],
+                      [0, 1]])
 
-        G = np.array([[0.5*dt**2, 0],
-                    [0, 0.5*dt**2],
-                    [dt, 0],
-                    [0, dt]])
+        H = np.array([[1, 0],
+                      [0, 1]])
 
-        H = np.array([[1, 0, 0, 0],
-                    [0, 1, 0, 0]])
-
-        Q = np.array([[0.25*dt**4*s_a_x**2, 0, 0.5*dt**3*s_a_x**2, 0],
-                    [0, 0.25*dt**4*s_a_y**2, 0, 0.5*dt**3*s_a_y**2],
-                    [0.5*dt**3*s_a_x**2, 0, dt**2*s_a_x**2, 0],
-                    [0, 0.5*dt**3*s_a_y**2, 0, dt**2*s_a_y**2]])
+        Q = np.array([[s_phi**2, s_phi**2],
+                      [s_phi**2, s_phi**2]])
 
         R = np.array([[s_x**2, 0],
                     [0, s_y**2]])
-        logging.basicConfig(filename='coordinates.log', level=logging.INFO, format='%(message)s')
 
         while self._running:
-            if self.pipeRecvCalcPos.poll():
-                self.initiate = self.pipeRecvCalcPos.recv()
-                if self.initiate['value'] == True:
-                    while self._running:
-                        if self.pipeRecvIMUReading.poll():
-                            self.imu = self.pipeRecvIMUReading.recv()['value']
-                            a_x = float(self.imu['accelx'])
-                            a_y = float(self.imu['accely'])
-                            accel = np.array([a_x, a_y])
+            if self.pipeRecvCurrentSpeed.poll():
+                self.vel_y = self.pipeRecvCurrentSpeed.recv()['value']
 
-                            x, P = Kalman.predict(x, F, G, accel, P, Q)         #predict new state
+                v[1] = self.vel_y
+                
+                if self.pipeRecvIMUReading.poll():
+                    self.imu = self.pipeRecvIMUReading.recv()['value']
+                    phi = float(self.imu['roll'])
 
-                            print(f"accel x: {a_x} | accel y: {a_y} | vel x: {x[2]} | vel y: {x[3]} | x: {x[0]} | y: {x[1]}")
+                    Rot = np.array([[np.cos(phi), -np.sin(phi)],
+                                    [np.sin(phi), np.cos(phi)]])
 
-                            self.pipeRecvIMUReading.send("ready")
+                    x, P = Kalman.predict(x, F, Rot, v, P, Q, dt)         #predict new state
 
-                        if self.pipeRecvGPSReading.poll():
-                            self.pos = self.pipeRecvGPSReading.recv()['value']/1000
+                    self.pipeRecvIMUReading.send("ready")
 
-                            x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+                if self.pipeRecvGPSReading.poll():
+                    self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
 
-                            self.pipeRecvGPSReading.send("ready")
+                    x, P = Kalman.update(x, self.pos, H, P, R)          #update state
 
-                        coordinates = (x[0], x[1])
+                    self.pipeRecvGPSReading.send("ready")
 
-                        self.queuesList[Pos.Queue.value].put(      #send back calculated position
-                            {
-                                "Owner": Pos.Owner.value,
-                                "msgID": Pos.msgID.value,
-                                "msgType": Pos.msgType.value,
-                                "msgValue": [coordinates, (self.pos[0], self.pos[1])]
-                            }
-                        )
+                coordinates = (x[0], x[1])
+
+                self.queuesList[Pos.Queue.value].put(      #send back calculated position
+                    {
+                        "Owner": Pos.Owner.value,
+                        "msgID": Pos.msgID.value,
+                        "msgType": Pos.msgType.value,
+                        "msgValue": [coordinates, (self.pos[0], self.pos[1])]
+                    }
+                )
+
+                self.pipeRecvCurrentSpeed.send("ready")

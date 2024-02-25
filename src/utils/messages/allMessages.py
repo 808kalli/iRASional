@@ -188,7 +188,7 @@ class InterDistance(Enum):
 
 #=========================FOR KALMAN FILTER========================
 
-class CalcPos(Enum):
+class CurrentSpeed(Enum):
     Queue = "General"
     Owner = "theadMove"
     msgID = 12

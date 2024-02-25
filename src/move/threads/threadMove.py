@@ -46,7 +46,7 @@ from src.utils.messages.allMessages import (
     Estimate,
     InterDistance,
     MoveConfig,
-    CalcPos,
+    CurrentSpeed,
     Pos,
     Location
 )
@@ -255,15 +255,6 @@ class threadMove(ThreadWithStop):
         
         time.sleep(0.5) #wait for initializations of the other processes
 
-        self.queuesList[CalcPos.Queue.value].put( #send request to do position calculation
-            {
-                "Owner": CalcPos.Owner.value,
-                "msgID": CalcPos.msgID.value,
-                "msgType": CalcPos.msgType.value,
-                "msgValue": True
-            }   
-        )
-
         viz = []
 
         
@@ -463,6 +454,15 @@ class threadMove(ThreadWithStop):
                     #         print("Current path: ", path['value'])
                     #         self.pipeRecvPathPlanning.send("ready")
                     #         break
+
+                    self.queuesList[CurrentSpeed.Queue.value].put( #send request to do position calculation
+                        {
+                            "Owner": CurrentSpeed.Owner.value,
+                            "msgID": CurrentSpeed.msgID.value,
+                            "msgType": CurrentSpeed.msgType.value,
+                            "msgValue": 0.15    # m/s
+                        }   
+                    )
 
                     if self.pipeRecvPos.poll():
                         coordinates, (pos_x, pos_y) = self.pipeRecvPos.recv()['value']
