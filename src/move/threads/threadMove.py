@@ -393,9 +393,10 @@ class threadMove(ThreadWithStop):
                         if self.pipeRecvcamera_lf.poll():
                             self.pipeRecvcamera_lf.recv()
                         self.pipeRecvcamera_lf.send("ready")
-               
+
+                #EVERYTHING AFTER "else" IS FOR TESTING
                 else:
-                    #======================INTERSECTION NAV=======================================
+                    #======================INTERSECTION NAVIGATION=======================================
                     # xs = (0.83, 0)
                     # xf = (0, 0.76)
                     # phi = 89.9999
@@ -407,21 +408,8 @@ class threadMove(ThreadWithStop):
                     # left_turn(self.pipeIMUrecv, self.queuesList, dist1, angle, dist2, self.speed)
                     # print(self.pipeIMUrecv.recv())
                     # self.pipeIMUrecv.send("ready")
-                    
 
-
-                    #========================LOCALIZATION==========================================
-                    # steer(self.queuesList, 23)
-                    # time.sleep(7)
-                    # steer(self.queuesList, -22)
-                    # time.sleep(10)
-                    # setSpeed(self.queuesList, -10)
-                    # time.sleep(2)
-                    # x = [15,20,120,125]
-                    # y = [19,19,56.5,56.5]
-                    # x = np.asfarray(x)
-                    # y = np.asfarray(y)
-                    # park_the_car(x,y,self.queuesList)
+                    #========================LOCALIZATION + LANE FOLLOWING==========================================
                     
                     try:
                         if self.pipeRecvcamera_lf.poll():
@@ -496,49 +484,15 @@ class threadMove(ThreadWithStop):
                     #         self.pipeRecvPathPlanning.send("ready")
                     #         break
 
-                    # if self.pipeRecvPos.poll():
-                    #     coordinates = self.pipeRecvPos.recv()['value']
-                    #     # print(coordinates)
-                    #     viz.append(coordinates)
-
-                    #     # Define the file name
-                    #     file_name = "coordinates.txt"
-
-                    #     with open(file_name, 'w') as file:
-                    #         # Iterate over each tuple in coordinates
-                    #         for coord in viz:
-                    #             # Convert the tuple to a string and write it to the file followed by a newline
-                    #             file.write(str(coord) + '\n')
-
-                    #     self.pipeRecvPos.send("ready")
-
-                    # self.queuesList[CurrentSpeed.Queue.value].put( #send request to do position calculation
-                    #     {
-                    #         "Owner": CurrentSpeed.Owner.value,
-                    #         "msgID": CurrentSpeed.msgID.value,
-                    #         "msgType": CurrentSpeed.msgType.value,
-                    #         "msgValue": 0.15
-                    #     }   
-                    # )
-
-                    # if self.pipeRecvPos.poll():
-                    #     coordinates = self.pipeRecvPos.recv()['value']
-                    #     coordinates = (coordinates[0], coordinates[1])
-                    #     print(coordinates)
-
-                    #     # Define the file name
-                    #     file_path = 'coordinates.txt'
-                    #     data_to_write = str(coordinates)
-
-                    #     with open(file_path, 'r') as file:
-                    #         lines = file.readlines()
-
-                    #     empty_line_index = next((i for i, line in enumerate(lines) if line.strip() == ''), len(lines))
-
-                    #     with open(file_path, 'a') as file:
-                    #         if empty_line_index > 0:
-                    #             file.write('\n')
-                    #         file.write(data_to_write)
-
-
-                    #     self.pipeRecvPos.send("ready")
+                    #===================THER TESTS=====================
+                    # steer(self.queuesList, 23)
+                    # time.sleep(7)
+                    # steer(self.queuesList, -22)
+                    # time.sleep(10)
+                    # setSpeed(self.queuesList, -10)
+                    # time.sleep(2)
+                    # x = [15,20,120,125]
+                    # y = [19,19,56.5,56.5]
+                    # x = np.asfarray(x)
+                    # y = np.asfarray(y)
+                    # park_the_car(x,y,self.queuesList)
