@@ -20,7 +20,7 @@ class Gps:
         self.anchor_x = [3120,0,5960]
         self.anchor_y = [-1620,3860,3660]
         self.count = 0
-        self.samples_to_count = 10
+        self.samples_to_count = 100
         self.previous_value = 0
         self.total = np.array((0,0))
     

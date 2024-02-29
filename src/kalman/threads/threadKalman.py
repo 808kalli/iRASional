@@ -1,6 +1,7 @@
 import threading
 import base64
 import time
+import math
 import numpy as np
 import logging
 
@@ -8,7 +9,7 @@ import src.kalman.threads.Kalman as Kalman
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
-    CalcPos,
+    CurrentSpeed,
     Pos,
     Location,
     ImuData
@@ -23,28 +24,29 @@ class threadKalman(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
-        pipeRecvCalcPos, pipeSendCalcPos = Pipe()
+        pipeRecvCurrentSpeed, pipeSendCurrentSpeed = Pipe()
         pipeRecvIMUReading, pipeSendIMUReading = Pipe()
         pipeRecvGPSReading, pipeSendGPSReading = Pipe()
         self.pipeRecvGPSReading = pipeRecvGPSReading
         self.pipeSendGPSReading = pipeSendGPSReading
         self.pipeRecvIMUReading = pipeRecvIMUReading
         self.pipeSendIMUReading = pipeSendIMUReading
-        self.pipeRecvCalcPos = pipeRecvCalcPos
-        self.pipeSendCalcPos = pipeSendCalcPos
+        self.pipeRecvCurrentSpeed = pipeRecvCurrentSpeed
+        self.pipeSendCurrentSpeed = pipeSendCurrentSpeed
         self.subscribe()
-        self.pipeRecvCalcPos.send("ready")   #send ready flag through pipe
+        self.pipeRecvCurrentSpeed.send("ready")   #send ready flag through pipe
         self.pipeRecvIMUReading.send("ready")
         self.pipeRecvGPSReading.send("ready")
+
 
     def subscribe(self):
         """Subscribe function. In this function we make all the required subscribe to process gateway"""
         self.queuesList["Config"].put(
             {
                 "Subscribe/Unsubscribe": "subscribe",
-                "Owner": CalcPos.Owner.value,
-                "msgID": CalcPos.msgID.value,
-                "To": {"receiver": "threadPathPlanning", "pipe": self.pipeSendCalcPos},
+                "Owner": CurrentSpeed.Owner.value,
+                "msgID": CurrentSpeed.msgID.value,
+                "To": {"receiver": "threadPathPlanning", "pipe": self.pipeSendCurrentSpeed},
             }
         )
 
@@ -98,81 +100,85 @@ class threadKalman(ThreadWithStop):
     def run(self):
         """This function will run while the running flag is True"""
         
+        
         #initial values
-        dt = 0.1        #time interval
-        x_x = 0
-                 #initial x position
-        x_y = 0         #initial y position
-        u0_x = 0        #initial x velocity
-        u0_y = 0        #initial y velocity
-        a_x = 0         #initial x acceleration
-        a_y = 0         #initial y acceleration
+        dt = 0.5        #time interval
+        x_x = 4.12      #initial x position
+        x_y = 1         #initial y position
 
+        #=============DO NOT CHANGES THESE VALUES================
         #IMU acceleration covarriance
-        s_a_x = 1e-2
-        s_a_y = 1e-2
+        s_angle = 1e-5
 
         #GPS observation covarriance
-        s_x = 1e-1
-        s_y = 1e-1
+        s_x = 1e-3  
+        s_y = 1e-4
+        #========================================================
 
-        P = np.array([[1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10],
-                    [1e-10, 1e-10, 1e-10, 1e-10]])
+        P = np.array([[1e-10, 1e-10],
+                      [1e-10, 1e-10]])
 
-        accel = np.array([a_x, a_y])
+        x = np.array([x_x, x_y])
 
-        x = np.array([x_x, x_y, u0_x, u0_y])
+        F = np.array([[1, 0],
+                      [0, 1]])
 
-        F = np.array([[1, 0, dt, 0],
-                    [0, 1, 0, dt],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]])
+        H = np.array([[1, 0],
+                      [0, 1]])
 
-        G = np.array([[0.5*dt**2, 0],
-                    [0, 0.5*dt**2],
-                    [dt, 0],
-                    [0, dt]])
-
-        H = np.array([[1, 0, 0, 0],
-                    [0, 1, 0, 0]])
-
-        Q = np.array([[0.25*dt**4*s_a_x**2, 0, 0.5*dt**3*s_a_x**2, 0],
-                    [0, 0.25*dt**4*s_a_y**2, 0, 0.5*dt**3*s_a_y**2],
-                    [0.5*dt**3*s_a_x**2, 0, dt**2*s_a_x**2, 0],
-                    [0, 0.5*dt**3*s_a_y**2, 0, dt**2*s_a_y**2]])
+        Q = np.array([[s_angle**2, s_angle**2],
+                      [s_angle**2, s_angle**2]])
 
         R = np.array([[s_x**2, 0],
                     [0, s_y**2]])
 
         while self._running:
-            if self.pipeRecvCalcPos.poll():
-                self.initiate = self.pipeRecvCalcPos.recv()
-                if self.initiate['value'] == True:
-                    while self._running:
-                        if self.pipeRecvIMUReading.poll():
-                            self.imu = self.pipeRecvIMUReading.recv()['value']
-                            magx = float(self.imu['magx'])
+            if self.pipeRecvCurrentSpeed.poll():
+                self.vel_y = self.pipeRecvCurrentSpeed.recv()['value']
+                v = np.array([0, self.vel_y])
 
-                            print(magx)
+                #Predict step (IMU)
+                if self.pipeRecvIMUReading.poll():
+                    self.imu = self.pipeRecvIMUReading.recv()['value']
+                    magx = float(self.imu['magx'])
+                    magy = float(self.imu['magy'])
 
-                            self.pipeRecvIMUReading.send("ready")
+                    heading = math.atan2(magy, magx)
+                    
+                    if heading < 0:
+                        heading += 2 * math.pi
 
-                        if self.pipeRecvGPSReading.poll():
-                            self.pos = self.pipeRecvGPSReading.recv()['value']/1000
+                    phi = heading                                   #car angle from north
+                    axis_angle_to_north = 1.43302004                #axis angle from north
+                    angle = axis_angle_to_north - phi               #car angle to axis
 
-                            x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+                    if angle < 0:
+                        angle += 2 * math.pi
 
-                            self.pipeRecvGPSReading.send("ready")
+                    Rot = np.array([[np.cos(angle), -np.sin(angle)],
+                                    [np.sin(angle), np.cos(angle)]])
+                                        
+                    x, P = Kalman.predict(x, F, Rot, v, P, Q, dt)         #predict new state
 
-                            coordinates = (x[0], x[1])
+                    coordinates = (x[0], x[1])
 
-                            self.queuesList[Pos.Queue.value].put(      #send back calculated position
-                                {
-                                    "Owner": Pos.Owner.value,
-                                    "msgID": Pos.msgID.value,
-                                    "msgType": Pos.msgType.value,
-                                    "msgValue": self.pos
-                                }
-                            )
+                    self.queuesList[Pos.Queue.value].put(      #send back calculated position
+                        {
+                            "Owner": Pos.Owner.value,
+                            "msgID": Pos.msgID.value,
+                            "msgType": Pos.msgType.value,
+                            "msgValue": coordinates
+                        }
+                    )
+
+                    self.pipeRecvIMUReading.send("ready")
+
+                #Update step (GPS)
+                if self.pipeRecvGPSReading.poll():
+                    self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
+
+                    x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+
+                    self.pipeRecvGPSReading.send("ready")
+
+            self.pipeRecvCurrentSpeed.send("ready")

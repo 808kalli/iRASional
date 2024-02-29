@@ -8,7 +8,6 @@ from src.gps.threads.Gps import Gps
 
 from multiprocessing import Pipe
 from src.utils.messages.allMessages import (
-    CalcPos,
     Pos,
     Location,
     ImuData
