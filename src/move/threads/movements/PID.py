@@ -23,13 +23,12 @@ class PID:
         self.P = self.Kp * error
         self.I = self.I + (self.Ki * error * t)
         self.D = (self.Kd * (error - self.pError)) / t
-
         result = self.P + self.I + self.D
+        
 
         if self.limits is not None:
             result = float(np.clip(result, self.limits[0], self.limits[1]))
         result = round(result)
         self.pError = error
         self.ptime = time.time()
-
         return result

@@ -75,6 +75,7 @@ class MessageConverter:
         # ],
         "8": [["activate"], [bool], [False]],
         "9": [["speed", "time", "steer"], [float, float, float], [False]],
+        "11":[["activate"], [bool], [False]]
     }
     """ The 'commands' attribute is a dictionary, which contains key word and the acceptable format for each action type. """
 

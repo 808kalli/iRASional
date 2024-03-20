@@ -45,24 +45,37 @@ def inter_det(image):
     # Apply morphology operations
     horizontal = cv2.erode(horizontal, horizontalStructure)
     horizontal = cv2.dilate(horizontal, horizontalStructure)
-    # print(horizontal)
-    # Find edge coordinates of pixels with value 1
-    coordinates = np.column_stack(np.where(horizontal == 255))
-    
-    # Check if there are any pixels with value 1
-    if coordinates.shape[0] > 0:
-        # Find the pixel with the lowest y coordinate
-        start = coordinates[np.argmin(coordinates[:, 1])]
-
-        # Find the pixel with the highest y coordinate
-        end = coordinates[np.argmax(coordinates[:, 1])]
-
-        # print(f"start of intersection (pixel): {start[1], start[0]}")
-        # print(f"end of intersection (pixel): {end[1], end[0]}")
-        return horizontal, start, end
-    else:
-        print("No pixels with value 255 found.")
+    contours, hierarchy = cv2.findContours(horizontal,cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    cv2.drawContours(resized, contours, -1, (0,255,0), 3)
+    max_l = 0
+    start = [[0, 0]]
+    end = [[0, 0]]
+    for cnt in contours:
+        l = cv2.arcLength(cnt,True)
+        if(l>60):
+            if(l>max_l):
+                max_l = l
+                start = cnt[0]
+                end = cnt[len(cnt)//2]
+    if start[0][0] == 0 and end[0][0] == 0:
         return
+    return horizontal, [start[0][1], start[0][0]], end[0]
+    # coordinates = np.column_stack(np.where(horizontal == 255))
+    
+    # # Check if there are any pixels with value 1
+    # if coordinates.shape[0] > 0:
+    #     # Find the pixel with the lowest y coordinate
+    #     start = coordinates[np.argmin(coordinates[:, 1])]
+
+    #     # Find the pixel with the highest y coordinate
+    #     end = coordinates[np.argmax(coordinates[:, 1])]
+
+    #     # print(f"start of intersection (pixel): {start[1], start[0]}")
+    #     # print(f"end of intersection (pixel): {end[1], end[0]}")
+    #     return horizontal, start, end
+    # else:
+    #     print("No pixels with value 255 found.")
+    #     return
         
 
 

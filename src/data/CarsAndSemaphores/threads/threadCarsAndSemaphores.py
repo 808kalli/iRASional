@@ -52,6 +52,7 @@ class threadCarsAndSemaphores(ThreadWithStop):
     def run(self):
         self.reactor.run(installSignalHandlers=False)
 
+
     # ====================================== STOP ==========================================
     def stop(self):
         self.reactor.stop()

@@ -239,6 +239,13 @@ class RightDistance(Enum):
     msgID = 4
     msgType = "float"
 
+class Infrared(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 5
+    msgType = "float"
+
+
 ################################# From Locsys ##################################
 class Location(Enum):
     Queue = "General"

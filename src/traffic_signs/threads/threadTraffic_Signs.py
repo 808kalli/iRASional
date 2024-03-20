@@ -118,7 +118,7 @@ class threadTraffic_Signs(ThreadWithStop):
                 if detected:
                     traffic_signs[sign] = traffic_signs[sign]+1
                     # print(sign, traffic_signs[sign])
-                    if (traffic_signs[sign] >= 3) or ((sign =="Crosswalk" or sign == "roundabout")and traffic_signs[sign]>=2):
+                    if ((traffic_signs[sign] >= 2) or (((sign =="Crosswalk") or (sign == "Stop")) and traffic_signs[sign]>=1)):
                         # print("seen", sign)
                         self.queuesList[TrafficSign.Queue.value].put(
                             {

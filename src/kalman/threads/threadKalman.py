@@ -4,6 +4,7 @@ import time
 import math
 import numpy as np
 import logging
+import networkx as nx
 
 import src.kalman.threads.Kalman as Kalman 
 
@@ -24,6 +25,7 @@ class threadKalman(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
+        self.angles = []
         pipeRecvCurrentSpeed, pipeSendCurrentSpeed = Pipe()
         pipeRecvIMUReading, pipeSendIMUReading = Pipe()
         pipeRecvGPSReading, pipeSendGPSReading = Pipe()
@@ -104,15 +106,15 @@ class threadKalman(ThreadWithStop):
         #initial values
         dt = 0.5        #time interval
         x_x = 4.12      #initial x position
-        x_y = 1         #initial y position
+        x_y = 0.9       #initial y position
 
         #=============DO NOT CHANGES THESE VALUES================
         #IMU acceleration covarriance
-        s_angle = 1e-5
+        s_angle = 10**(-3.5)
 
         #GPS observation covarriance
-        s_x = 1e-3  
-        s_y = 1e-4
+        s_x = 1e-3
+        s_y = 1e-3
         #========================================================
 
         P = np.array([[1e-10, 1e-10],
@@ -126,11 +128,14 @@ class threadKalman(ThreadWithStop):
         H = np.array([[1, 0],
                       [0, 1]])
 
-        Q = np.array([[s_angle**2, s_angle**2],
-                      [s_angle**2, s_angle**2]])
+        Q = np.array([[s_angle**2, 0],
+                      [0, s_angle**2]])
 
         R = np.array([[s_x**2, 0],
                     [0, s_y**2]])
+
+        #read graph
+        G = nx.read_graphml("./Competition_track_graph.graphml")
 
         while self._running:
             if self.pipeRecvCurrentSpeed.poll():
@@ -141,16 +146,16 @@ class threadKalman(ThreadWithStop):
                 if self.pipeRecvIMUReading.poll():
                     self.imu = self.pipeRecvIMUReading.recv()['value']
                     magx = float(self.imu['magx'])
-                    magy = float(self.imu['magy'])
+                    magz = float(self.imu['magz'])
 
-                    heading = math.atan2(magy, magx)
+                    heading = math.atan2(-magx, magz)
                     
                     if heading < 0:
                         heading += 2 * math.pi
 
                     phi = heading                                   #car angle from north
-                    axis_angle_to_north = 1.43302004                #axis angle from north
-                    angle = axis_angle_to_north - phi               #car angle to axis
+                    axis_angle_to_north = 4.71239                   #axis angle from north
+                    angle = phi - axis_angle_to_north               #car angle to axis
 
                     if angle < 0:
                         angle += 2 * math.pi
@@ -162,12 +167,24 @@ class threadKalman(ThreadWithStop):
 
                     coordinates = (x[0], x[1])
 
-                    self.queuesList[Pos.Queue.value].put(      #send back calculated position
+                    #find nearest node to current coordinates
+                    closest_node = None
+                    min_distance = float('inf')
+
+                    for node in G.nodes():
+                        node_coordinates = (G.nodes[node]['x'], G.nodes[node]['y'])  # Assuming nodes have 'x' and 'y' attributes
+                        distance = np.sqrt((coordinates[0] - node_coordinates[0])**2 + (coordinates[1] - node_coordinates[1])**2)
+                        if distance < min_distance:
+                            min_distance = distance
+                            closest_node = node
+                    
+                    #send back calculated position
+                    self.queuesList[Pos.Queue.value].put(
                         {
                             "Owner": Pos.Owner.value,
                             "msgID": Pos.msgID.value,
                             "msgType": Pos.msgType.value,
-                            "msgValue": coordinates
+                            "msgValue": (coordinates, closest_node)
                         }
                     )
 
@@ -176,6 +193,7 @@ class threadKalman(ThreadWithStop):
                 #Update step (GPS)
                 if self.pipeRecvGPSReading.poll():
                     self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
+                    print(self.pos)
 
                     x, P = Kalman.update(x, self.pos, H, P, R)          #update state
 

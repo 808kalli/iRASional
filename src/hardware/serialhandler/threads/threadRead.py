@@ -159,3 +159,14 @@ class threadRead(ThreadWithStop):
                     }
                 )
                 # print(float(buff[3:-5]))
+        # elif buff[1] == '11':
+        #     if (buff[3:-2]!="ack;;"):
+        #         self.queuesList[Infrared.Queue.value].put(
+        #             {
+        #                 "Owner": Infrared.Owner.value,
+        #                 "msgID": Infrared.msgID.value,
+        #                 "msgType": Infrared.msgType.value,
+        #                 "msgValue": float(buff[3:-2]),
+        #             }
+        #         )
+ 

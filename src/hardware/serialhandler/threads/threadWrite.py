@@ -100,7 +100,7 @@ class threadWrite(ThreadWithStop):
         # self.logFile.write(command_msg)
         
         # uncomment to get IMU data 
-        
+
         command = {"action": "7", "activate": True}
         command_msg = self.messageConverter.get_command(**command)
         self.serialCom.write(command_msg.encode("ascii"))
@@ -108,11 +108,10 @@ class threadWrite(ThreadWithStop):
         
         # uncomment to get ultrasonic
         
-        # command = {"action": "8", "activate": True}
-        # command_msg = self.messageConverter.get_command(**command)
-        # self.serialCom.write(command_msg.encode("ascii"))
-        # self.logFile.write(command_msg)
-        
+        command = {"action": "8", "activate": True}
+        command_msg = self.messageConverter.get_command(**command)
+        self.serialCom.write(command_msg.encode("ascii"))
+        self.logFile.write(command_msg)
         
 
 

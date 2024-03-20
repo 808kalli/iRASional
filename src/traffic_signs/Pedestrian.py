@@ -6,7 +6,7 @@ def pedestrian(img):
     dimensions = img.shape
     h = int(dimensions[0])
     w = int(dimensions[1])
-    img = img[int(h/2.5): int(h/1.4) , int(w/4):int(w/1.5)]
+    img = img[int(h/5): int(h/1.3) , int(w/4):int(w/1.5)]
 
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
@@ -18,13 +18,14 @@ def pedestrian(img):
 
     pink_mask = cv2.inRange(imgHSV,lower,upper)
     pink_imgResult = cv2.bitwise_and(img,img,mask=pink_mask)
+    cv2.imwrite("ped.jpg",pink_imgResult)
     #print(imgResult.size)
     #print(pink_imgResult.size,"pink")
 
     #detect color
     color ="None"
     number_of_black_pix = np.sum(pink_imgResult == 0)
-    if number_of_black_pix<pink_imgResult.size-20000:
+    if number_of_black_pix<pink_imgResult.size-14000:
         color ="pink"
 
     if(color=="pink"):
