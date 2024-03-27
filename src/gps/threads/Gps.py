@@ -17,8 +17,8 @@ class Gps:
     def __init__(self):
         # Anchor node locations
         # anchor = #1 #2 #3 0,3860 3120,-1620 5960,3660
-        self.anchor_x = [3120,0,5960]
-        self.anchor_y = [-1620,3860,3660]
+        self.anchor_x = [3120,5960,0]
+        self.anchor_y = [-1590,3880,3690]
         self.count = 0
         self.samples_to_count = 100
         self.previous_value = 0

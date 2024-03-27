@@ -105,8 +105,8 @@ class threadKalman(ThreadWithStop):
         
         #initial values
         dt = 0.5        #time interval
-        x_x = 4.12      #initial x position
-        x_y = 0.9       #initial y position
+        x_x = 5.96      #initial x position
+        x_y = 0.37       #initial y position
 
         #=============DO NOT CHANGES THESE VALUES================
         #IMU acceleration covarriance
@@ -135,68 +135,84 @@ class threadKalman(ThreadWithStop):
                     [0, s_y**2]])
 
         #read graph
-        G = nx.read_graphml("./Competition_track_graph.graphml")
+        G = nx.read_graphml("/home/pi/Brain/src/kalman/threads/Lab_track_graph.graphml")
 
         while self._running:
             if self.pipeRecvCurrentSpeed.poll():
-                self.vel_y = self.pipeRecvCurrentSpeed.recv()['value']
+                self.vel_y = float(self.pipeRecvCurrentSpeed.recv()['value'])
                 v = np.array([0, self.vel_y])
 
-                #Predict step (IMU)
-                if self.pipeRecvIMUReading.poll():
-                    self.imu = self.pipeRecvIMUReading.recv()['value']
-                    magx = float(self.imu['magx'])
-                    magz = float(self.imu['magz'])
+                while not self.pipeRecvCurrentSpeed.poll():
 
-                    heading = math.atan2(-magx, magz)
-                    
-                    if heading < 0:
-                        heading += 2 * math.pi
+                    #Predict step (IMU)
+                    if self.pipeRecvIMUReading.poll():
+                        self.imu = self.pipeRecvIMUReading.recv()['value']
+                        magx = float(self.imu['magx'])
+                        magz = float(self.imu['magz'])
 
-                    phi = heading                                   #car angle from north
-                    axis_angle_to_north = 4.71239                   #axis angle from north
-                    angle = phi - axis_angle_to_north               #car angle to axis
+                        heading = math.atan2(-magx, magz)
+                        
+                        if heading < 0:
+                            heading += 2 * math.pi
 
-                    if angle < 0:
-                        angle += 2 * math.pi
+                        phi = heading                                   #car angle from north
+                        axis_angle_to_north = 4.71239                   #axis angle from north - 270 deg
+                        angle = phi - axis_angle_to_north               #car angle to axis
 
-                    Rot = np.array([[np.cos(angle), -np.sin(angle)],
-                                    [np.sin(angle), np.cos(angle)]])
-                                        
-                    x, P = Kalman.predict(x, F, Rot, v, P, Q, dt)         #predict new state
+                        if angle < 0:
+                            angle += 2 * math.pi
 
-                    coordinates = (x[0], x[1])
+                        Rot = np.array([[np.cos(angle), -np.sin(angle)],
+                                        [np.sin(angle), np.cos(angle)]])
+                                            
+                        x, P = Kalman.predict(x, F, Rot, v, P, Q, dt)         #predict new state
 
-                    #find nearest node to current coordinates
-                    closest_node = None
-                    min_distance = float('inf')
+                        coordinates = (x[0], x[1])
 
-                    for node in G.nodes():
-                        node_coordinates = (G.nodes[node]['x'], G.nodes[node]['y'])  # Assuming nodes have 'x' and 'y' attributes
-                        distance = np.sqrt((coordinates[0] - node_coordinates[0])**2 + (coordinates[1] - node_coordinates[1])**2)
-                        if distance < min_distance:
-                            min_distance = distance
-                            closest_node = node
-                    
-                    #send back calculated position
-                    self.queuesList[Pos.Queue.value].put(
-                        {
-                            "Owner": Pos.Owner.value,
-                            "msgID": Pos.msgID.value,
-                            "msgType": Pos.msgType.value,
-                            "msgValue": (coordinates, closest_node)
-                        }
-                    )
+                        #find nearest node to current coordinates
+                        closest_node = None
+                        min_distance = float('inf')
 
-                    self.pipeRecvIMUReading.send("ready")
+                        for node in G.nodes():
+                            node_coordinates = (G.nodes[node]['x'], G.nodes[node]['y'])  # Assuming nodes have 'x' and 'y' attributes
+                            distance = np.sqrt((coordinates[0] - node_coordinates[0])**2 + (coordinates[1] - node_coordinates[1])**2)
+                            if distance < min_distance:
+                                min_distance = distance
+                                closest_node = node
+                        
+                        #send back calculated position
+                        self.queuesList[Pos.Queue.value].put(
+                            {
+                                "Owner": Pos.Owner.value,
+                                "msgID": Pos.msgID.value,
+                                "msgType": Pos.msgType.value,
+                                "msgValue": (coordinates, closest_node)
+                            }
+                        )
 
-                #Update step (GPS)
-                if self.pipeRecvGPSReading.poll():
-                    self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
-                    print(self.pos)
+                        '''============= Code for graphing the trajectory, comment out before finals!!! =================='''
+                        file_path = 'coordinates.txt'
+                        data_to_write = str(coordinates)
 
-                    x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+                        with open(file_path, 'r') as file:
+                            lines = file.readlines()
 
-                    self.pipeRecvGPSReading.send("ready")
+                        empty_line_index = next((i for i, line in enumerate(lines) if line.strip() == ''), len(lines))
+
+                        with open(file_path, 'a') as file:
+                            if empty_line_index > 0:
+                                file.write('\n')
+                            file.write(data_to_write)
+                        '''=============================================================================================='''
+
+                        self.pipeRecvIMUReading.send("ready")
+
+                    #Update step (GPS)
+                    if self.pipeRecvGPSReading.poll():
+                        self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
+
+                        x, P = Kalman.update(x, self.pos, H, P, R)          #update state
+
+                        self.pipeRecvGPSReading.send("ready")
 
             self.pipeRecvCurrentSpeed.send("ready")

@@ -17,6 +17,9 @@ class PID:
         self.K = 0
         self.pTime = time.time()
 
+    def update_target(self, new_target):
+        self.targetVal = new_target
+
     def update(self, cVal):
         t = time.time() - self.pTime
         error = self.targetVal - cVal

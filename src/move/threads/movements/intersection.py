@@ -3,8 +3,10 @@ from src.move.threads.movements.basic import setSpeed, steer, brake
 from src.move.threads.movements.PID import PID
 from scipy.interpolate import CubicSpline
 import numpy as np
-import math
-from scipy.spatial import distance
+
+from src.utils.messages.allMessages import (
+    CurrentSpeed
+)
 
 def find_targ(angle, direction):
     print("angle ", angle)
@@ -47,8 +49,9 @@ def gostraight(pipe, queuesList, t):
             steer(queuesList, angle)
 
 def draw_trajectory(xs, xf, phi):
-    x = [0, 20, 72]
-    y = [0, 15, 25]
+    offset = 0
+    x = [0, 20 - offset, 72 - offset]
+    y = [0, 15 - offset, 25 - offset]
     xx = np.linspace(min(x), max(x), 3)
     yy = CubicSpline(x, y)
     yy_der = yy.derivative()
@@ -70,21 +73,41 @@ def draw_trajectory(xs, xf, phi):
     angles = np.rad2deg(angles_rad)
     for i in range(len(angles)):
         angles[i] = 90 - angles[i]
-#    plt.plot(0, 0, 'ro')
-#    for i in range(len(x)):
-#        plt.plot(x[i], y[i], 'ro')
-#    plt.plot(69, 66.5, 'ro')
-#    plt.plot(xx, yy(xx), 'k-')
-#    plt.grid()
-#    plt.show()
 
     return np.diff(angles), distances
 
+def draw_trajectory_left(xs, xf, phi):
+    offset = 0
+    x = [0, 20 - offset, 68 - offset]
+    y = [0, 50 - offset, 100 - offset]
+    xx = np.linspace(min(x), max(x), 8)
+    yy = CubicSpline(x, y)
+    yy_der = yy.derivative()
+    slopes = []
+    distances = []
+    i = 0
+    for xes in xx:
+        slopes.append(yy_der(xes))
 
-def intersection_navigation(current, pipe, queuesList, speed=15):
+    for i in range(len(xx)):
+        if i + 1 < len(xx):
+            point1 = np.array([xx[i], yy(xx[i])])
+            point2 = np.array([xx[i+1], yy(xx[i+1])])
+            distances.append(np.linalg.norm(point1 - point2))
+        else:
+            break
+
+    angles_rad = np.arctan(slopes)
+    angles = np.rad2deg(angles_rad)
+    for i in range(len(angles)):
+        angles[i] = 90 - angles[i]
+
+    return (-1) * np.diff(angles), distances
+
+def intersection_navigation(current, pipe, queuesList, offset = 0, speed=15):
     if current == "RIGHT":
         gostraight(pipe, queuesList, 0.5)
-        angles, distances = draw_trajectory(0, 0, 0)
+        angles, distances = draw_trajectory(offset, 0, 0)
         i = 0
         angle=0
         for dist in distances:
@@ -95,7 +118,7 @@ def intersection_navigation(current, pipe, queuesList, speed=15):
             time.sleep(t)
     elif current == "LEFT":
         gostraight(pipe, queuesList, 0.5)
-        angles, distances = draw_trajectory(0, 0, 0)
+        angles, distances = draw_trajectory_left(offset, 0, 0)
         i = 0
         angle=0
         for dist in distances:
