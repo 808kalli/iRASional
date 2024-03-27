@@ -135,6 +135,9 @@ class threadRead(ThreadWithStop):
                     "accelx": splitedBuffer[3],
                     "accely": splitedBuffer[4],
                     "accelz": splitedBuffer[5],
+                    "magx": splitedBuffer[6],
+                    "magy": splitedBuffer[7],
+                    "magz": splitedBuffer[8]
                 }
                 self.queuesList[ImuData.Queue.value].put(
                     {

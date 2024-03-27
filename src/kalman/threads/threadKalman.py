@@ -1,6 +1,7 @@
 import threading
 import base64
 import time
+import math
 import numpy as np
 import logging
 
@@ -137,7 +138,19 @@ class threadKalman(ThreadWithStop):
                 
                 if self.pipeRecvIMUReading.poll():
                     self.imu = self.pipeRecvIMUReading.recv()['value']
-                    phi = float(self.imu['roll'])
+                    magx = float(self.imu['magx'])
+                    magy = float(self.imu['magy'])
+
+                    # Calculate heading in radians
+                    heading = math.atan2(magy, magx)
+
+                    # Convert negative angles to positive
+                    if heading < 0:
+                        heading += 2 * math.pi
+
+                    # Convert radians to degrees
+                    phi = math.degrees(heading)
+                    print(phi)
 
                     Rot = np.array([[np.cos(phi), -np.sin(phi)],
                                     [np.sin(phi), np.cos(phi)]])
