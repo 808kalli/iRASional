@@ -16,4 +16,3 @@ def update(x, z, H, P, R):
     P = (np.eye(2, 2) - K@H)@P
 
     return x, P
-

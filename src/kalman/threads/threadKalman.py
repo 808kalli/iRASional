@@ -4,6 +4,7 @@ import time
 import math
 import numpy as np
 import logging
+import networkx as nx
 
 import src.kalman.threads.Kalman as Kalman 
 
@@ -24,6 +25,7 @@ class threadKalman(ThreadWithStop):
         self.queuesList = queuesList
         self.logger = logger
         self.debugger = debugger
+        self.angles = []
         pipeRecvCurrentSpeed, pipeSendCurrentSpeed = Pipe()
         pipeRecvIMUReading, pipeSendIMUReading = Pipe()
         pipeRecvGPSReading, pipeSendGPSReading = Pipe()
@@ -99,24 +101,25 @@ class threadKalman(ThreadWithStop):
     def run(self):
         """This function will run while the running flag is True"""
         
+        
         #initial values
-        dt = 0.1        #time interval
-        x_x = 0         #initial x position
-        x_y = 0         #initial y position
+        dt = 0.5        #time interval
+        x_x = 4.12      #initial x position
+        x_y = 0.9       #initial y position
 
+        #=============DO NOT CHANGES THESE VALUES================
         #IMU acceleration covarriance
-        s_phi = 1e-2
+        s_angle = 10**(-3.5)
 
         #GPS observation covarriance
-        s_x = 1e-1
-        s_y = 1e-1
+        s_x = 1e-3
+        s_y = 1e-3
+        #========================================================
 
         P = np.array([[1e-10, 1e-10],
                       [1e-10, 1e-10]])
 
         x = np.array([x_x, x_y])
-
-        v = np.array([0, 0])
 
         F = np.array([[1, 0],
                       [0, 1]])
@@ -124,57 +127,75 @@ class threadKalman(ThreadWithStop):
         H = np.array([[1, 0],
                       [0, 1]])
 
-        Q = np.array([[s_phi**2, s_phi**2],
-                      [s_phi**2, s_phi**2]])
+        Q = np.array([[s_angle**2, 0],
+                      [0, s_angle**2]])
 
         R = np.array([[s_x**2, 0],
                     [0, s_y**2]])
 
+        #read graph
+        G = nx.read_graphml("./Competition_track_graph.graphml")
+
         while self._running:
             if self.pipeRecvCurrentSpeed.poll():
                 self.vel_y = self.pipeRecvCurrentSpeed.recv()['value']
+                v = np.array([0, self.vel_y])
 
-                v[1] = self.vel_y
-                
+                #Predict step (IMU)
                 if self.pipeRecvIMUReading.poll():
                     self.imu = self.pipeRecvIMUReading.recv()['value']
                     magx = float(self.imu['magx'])
-                    magy = float(self.imu['magy'])
+                    magz = float(self.imu['magz'])
 
-                    # Calculate heading in radians
-                    heading = math.atan2(magy, magx)
-
-                    # Convert negative angles to positive
+                    heading = math.atan2(-magx, magz)
+                    
                     if heading < 0:
                         heading += 2 * math.pi
 
-                    # Convert radians to degrees
-                    phi = math.degrees(heading)
-                    print(phi)
+                    phi = heading                                   #car angle from north
+                    axis_angle_to_north = 4.71239                   #axis angle from north
+                    angle = phi - axis_angle_to_north               #car angle to axis
 
-                    Rot = np.array([[np.cos(phi), -np.sin(phi)],
-                                    [np.sin(phi), np.cos(phi)]])
+                    if angle < 0:
+                        angle += 2 * math.pi
 
+                    Rot = np.array([[np.cos(angle), -np.sin(angle)],
+                                    [np.sin(angle), np.cos(angle)]])
+                                        
                     x, P = Kalman.predict(x, F, Rot, v, P, Q, dt)         #predict new state
+
+                    coordinates = (x[0], x[1])
+
+                    #find nearest node to current coordinates
+                    closest_node = None
+                    min_distance = float('inf')
+
+                    for node in G.nodes():
+                        node_coordinates = (G.nodes[node]['x'], G.nodes[node]['y'])  # Assuming nodes have 'x' and 'y' attributes
+                        distance = np.sqrt((coordinates[0] - node_coordinates[0])**2 + (coordinates[1] - node_coordinates[1])**2)
+                        if distance < min_distance:
+                            min_distance = distance
+                            closest_node = node
+                    
+                    #send back calculated position
+                    self.queuesList[Pos.Queue.value].put(
+                        {
+                            "Owner": Pos.Owner.value,
+                            "msgID": Pos.msgID.value,
+                            "msgType": Pos.msgType.value,
+                            "msgValue": (coordinates, closest_node)
+                        }
+                    )
 
                     self.pipeRecvIMUReading.send("ready")
 
+                #Update step (GPS)
                 if self.pipeRecvGPSReading.poll():
                     self.pos = self.pipeRecvGPSReading.recv()['value']/1000     #from mm to m
+                    print(self.pos)
 
                     x, P = Kalman.update(x, self.pos, H, P, R)          #update state
 
                     self.pipeRecvGPSReading.send("ready")
 
-                coordinates = (x[0], x[1])
-
-                self.queuesList[Pos.Queue.value].put(      #send back calculated position
-                    {
-                        "Owner": Pos.Owner.value,
-                        "msgID": Pos.msgID.value,
-                        "msgType": Pos.msgType.value,
-                        "msgValue": [coordinates, (self.pos[0], self.pos[1])]
-                    }
-                )
-
-                self.pipeRecvCurrentSpeed.send("ready")
+            self.pipeRecvCurrentSpeed.send("ready")

@@ -16,11 +16,19 @@ import matplotlib.image as mpimg
 class Gps:
     def __init__(self):
         # Anchor node locations
+<<<<<<< HEAD
         # anchor = #1 #2 #3
         self.anchor_x = [2800,6200,0]
         self.anchor_y = [0,5200,5200]
         self.count = 0
         self.samples_to_count = 10
+=======
+        # anchor = #1 #2 #3 0,3860 3120,-1620 5960,3660
+        self.anchor_x = [3120,0,5960]
+        self.anchor_y = [-1620,3860,3660]
+        self.count = 0
+        self.samples_to_count = 100
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
         self.previous_value = 0
         self.total = np.array((0,0))
     

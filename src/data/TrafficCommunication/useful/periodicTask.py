@@ -50,9 +50,15 @@ class periodicTask(task.LoopingCall):
         # {"reqORinfo": "info", "type":"deviceSpeed", "value1":km/h}
         # {"reqORinfo": "info", "type":"historyData", "value1":id, "value2":x, "value3":y}
         
+<<<<<<< HEAD
         # m = "locsysDevie"
         # val = [] # 12.3 is a x example, 6.9 is a y example, Where position is measured in meters
         # self.shrd_mem.insert(m, val)
+=======
+        m = "devicePos"
+        val = [12.3, 6.9] # 12.3 is a x example, 6.9 is a y example, Where position is measured in meters
+        self.shrd_mem.insert(m, val)
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
         if self.tcp_factory.isConnected():
             tosend = self.shrd_mem.get()

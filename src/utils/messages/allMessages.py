@@ -221,6 +221,33 @@ class InstantConsumption(Enum):
     msgID = 3
     msgType = "float"
 
+<<<<<<< HEAD
+=======
+class FrontDistance(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 4
+    msgType = "float"
+
+class LeftDistance(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 4
+    msgType = "float"
+    
+class RightDistance(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 4
+    msgType = "float"
+
+class Infrared(Enum):
+    Queue = "General"
+    Owner = "threadRead"
+    msgID = 5
+    msgType = "float"
+
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
 ################################# From Locsys ##################################
 class Location(Enum):
@@ -260,4 +287,8 @@ class Pedestrian(Enum):
     Queue = "General"
     Owner = "threadPedestrian"
     msgID = 1
+<<<<<<< HEAD
     msgType = "boolean"
+=======
+    msgType = "boolean"
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010

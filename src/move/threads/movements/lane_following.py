@@ -17,7 +17,11 @@ def canny(image):
     #used to extract the edges from the image
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
+<<<<<<< HEAD
     canny = cv2.Canny(blur, 250, 255) #usually 1:2 or 1:3 on low threshod : high threshold -> we need more strict threshold
+=======
+    canny = cv2.Canny(blur, 220, 255) #usually 1:2 or 1:3 on low threshod : high threshold -> we need more strict threshold
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
     return canny
 
 
@@ -178,7 +182,11 @@ def lane_det(bird_view, original_image, Minv):
         #margin need to be redused so when the window is far up in the image it wont detect both lanes in the same window
 
 
+<<<<<<< HEAD
     safe_windows_num = 20 #how many windows can we afford to lose
+=======
+    safe_windows_num = 10 #how many windows can we afford to lose
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
     if (right_warning>=safe_windows_num):
         right_lane_warning=1
     if (left_warning>=safe_windows_num):
@@ -326,7 +334,11 @@ def lane_det(bird_view, original_image, Minv):
         result = cv2.addWeighted(original_image, 0.8, newwarp, 1, 0)
         cv2.imshow('result', result)
     
+<<<<<<< HEAD
     error_in_pixs = current_trajectory[0][0] - desired_trajectory[bird_height-1][0] - 25
+=======
+    error_in_pixs = current_trajectory[0][0] - desired_trajectory[bird_height-1][0] - 60
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
     degree_error = np.arctan(degree_error) * (180 / np.pi)
     degree_error = round(degree_error, 1)
     
@@ -344,7 +356,11 @@ def lane_det(bird_view, original_image, Minv):
     #     error_in_pixs = error_in_pixs + offset
         
 
+<<<<<<< HEAD
     return error_in_pixs, degree_error
+=======
+    return error_in_pixs, degree_error, desired_fit[0], desired_fit[1], desired_fit[2]
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
 
 def stanley_correction( crosstrack_error,heading_error,K, velocity=15): #crosstrack in pixels
@@ -362,6 +378,7 @@ def followLane(img, K, speed=15):
         bird, Minv = perspective_transform(cropped_image)
         data = lane_det(bird, img, Minv)
         if data is not None:
+<<<<<<< HEAD
             error_in_pixs, error_in_degrees = data
             # print(f"Error in pixels is: {error_in_pixs}")
             # print(f"Error in degrees is {error_in_degrees}")
@@ -369,6 +386,20 @@ def followLane(img, K, speed=15):
                 angle = stanley_correction(error_in_pixs, error_in_degrees, K, speed)
                 logging.info("K = %.2f",K)
                 logging.info("pixel error: %.2f degree error: %.2f stanley angle: %.2f",error_in_pixs,error_in_degrees, angle)
+=======
+            error_in_pixs, error_in_degrees, a2, a1, a0 = data
+            # with open('numbers.txt', 'a') as file:
+            #     numbers = (a2, a1, a0)
+            #     file.write(' '.join(map(str, numbers)) + '\n')
+            # print(f"Error in pixels is: {error_in_pixs}")
+            # print(f"Error in degrees is {error_in_degrees}")
+            if speed != 0:
+                if abs(error_in_degrees) > 10:
+                    K = 0.205
+                angle = stanley_correction(error_in_pixs, error_in_degrees, K, speed)
+                # logging.info("K = %.2f",K)
+                # logging.info("pixel error: %.2f degree error: %.2f stanley angle: %.2f",error_in_pixs,error_in_degrees, angle)
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
                 return angle
             else: 
                 return 0

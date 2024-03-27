@@ -59,6 +59,7 @@ class MessageConverter:
         "5": [["activate"], [bool], [False]],
         "6": [["activate"], [bool], [False]],
         "7": [["activate"], [bool], [False]],
+<<<<<<< HEAD
         "8": [
             [
                 "point1x",
@@ -74,6 +75,25 @@ class MessageConverter:
             [False],
         ],
         "9": [["speed", "time", "steer"], [float, float, float], [False]],
+=======
+        # "8": [
+        #     [
+        #         "point1x",
+        #         "point1y",
+        #         "point2x",
+        #         "point2y",
+        #         "point3x",
+        #         "point3y",
+        #         "point4x",
+        #         "point4y",
+        #     ],
+        #     [float, float, float, float, float, float, float, float],
+        #     [False],
+        # ],
+        "8": [["activate"], [bool], [False]],
+        "9": [["speed", "time", "steer"], [float, float, float], [False]],
+        "11":[["activate"], [bool], [False]]
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
     }
     """ The 'commands' attribute is a dictionary, which contains key word and the acceptable format for each action type. """
 

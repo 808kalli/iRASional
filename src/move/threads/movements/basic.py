@@ -6,8 +6,13 @@ Record
 )
 
 def setSpeed(queuesList, speed=15):
+<<<<<<< HEAD
     print("#----- setting speed -----#")
     print("speed = ", speed)
+=======
+    # print("#----- setting speed -----#")
+    # print("speed = ", speed)
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
     queuesList[SpeedMotor.Queue.value].put(
     {
         "Owner": SpeedMotor.Owner.value,

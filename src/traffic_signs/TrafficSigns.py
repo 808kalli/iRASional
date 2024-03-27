@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 import logging
+<<<<<<< HEAD
+=======
+import time
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
 def empty(a):
     pass
@@ -94,7 +98,12 @@ def TrafficSignDetection(img):
         h = int(dimensions[0])
         w = int(dimensions[1])
         #img = img[int(h/6): int(h/2.7) , int(w/2.4):int(w/1.2) ]
+<<<<<<< HEAD
         img = img[int(h/5): int(h/2.6) , int(w/2.4):int(w/1) ]
+=======
+        img = img[int(h/4.9): int(h/2.4) , int(w/2.1):int(w/1) ]
+        cv2.imwrite("cropped.jpg",img)
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
         #img = img[0: int(h/2.2) , int(w/2.2):w] #int(h/6): int(h/2) , int(w/2.5):w (for avi), 0: int(h/2) , int(w/2):w (for mp4)
         #cv2.imwrite("image.jpg",img)
         imgContour = img.copy()
@@ -125,7 +134,11 @@ def TrafficSignDetection(img):
         #------RED MASK--------
         #lower = np.array([124,90,75]) #[124,90,75] , [0,79,97]
         #upper = np.array([179,213,171]) #[179,213,171], [179,205,185]
+<<<<<<< HEAD
         lower = np.array([124,90,60]) #[124,90,75] , [0,79,97]
+=======
+        lower = np.array([117,90,60]) #[124,90,75] , [0,79,97]
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
         upper = np.array([179,255,220]) #[179,213,171], [179,205,185]
         red_mask = cv2.inRange(imgHSV,lower,upper)
         red_imgResult = cv2.bitwise_and(img_cropped,img_cropped,mask=red_mask)
@@ -135,7 +148,11 @@ def TrafficSignDetection(img):
         red_color = False
         red_line = False
         number_of_black_pix = np.sum(red_imgResult == 0)
+<<<<<<< HEAD
         if number_of_black_pix<red_imgResult.size-800:
+=======
+        if number_of_black_pix<red_imgResult.size-700:
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
             # print("black",number_of_black_pix)
             # print("red:",red_imgResult.size)
             red_color = True
@@ -158,7 +175,11 @@ def TrafficSignDetection(img):
         # detect color
         blue_color = False
         number_of_black_pix = np.sum(blue_imgResult == 0)
+<<<<<<< HEAD
         if number_of_black_pix < blue_imgResult.size-1000:
+=======
+        if number_of_black_pix < blue_imgResult.size-600:
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
             blue_color = True
             
 
@@ -210,7 +231,11 @@ def TrafficSignDetection(img):
             cv2.putText(imgContour, "Crosswalk",
                         (x + (w // 2) + 10, y + (h // 2) - 70), cv2.FONT_HERSHEY_COMPLEX, 0.7,
                         (0, 0, 0), 2)
+<<<<<<< HEAD
         elif((shape=="Hexagon" or shape == "Arow" ) and blue_color == True and sides>15):
+=======
+        elif((shape=="Hexagon" or shape == "Arrow" ) and (blue_color == True) and (sides>14)):
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
             print("Parking")
             sign = "Parking"
             Found = True
@@ -273,7 +298,15 @@ def TrafficSignDetection(img):
 
 
 if __name__ == "__main__":
+<<<<<<< HEAD
 
     detected, sign = TrafficSignDetection('img2.jpg')
     print(detected, sign)
+=======
+    start = time.time()
+    detected, sign = TrafficSignDetection('result.jpg')
+    print(detected, sign)
+    end = time.time()
+    print(end - start)
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 

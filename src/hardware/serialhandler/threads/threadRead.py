@@ -32,6 +32,10 @@ from src.utils.messages.allMessages import (
     ImuData,
     InstantConsumption,
     EnableButton,
+<<<<<<< HEAD
+=======
+    FrontDistance
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 )
 
 
@@ -127,7 +131,11 @@ class threadRead(ThreadWithStop):
         elif buff[1] == '7':
             buff = buff[3:-2]
             splitedBuffer = buff.split(";")
+<<<<<<< HEAD
             if ((splitedBuffer[0] != "ack") and (len(splitedBuffer) == 6)):
+=======
+            if ((splitedBuffer[0] != "ack") and (len(splitedBuffer) == 9)):
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
                 data = {
                     "roll": splitedBuffer[0],
                     "pitch": splitedBuffer[1],
@@ -137,13 +145,45 @@ class threadRead(ThreadWithStop):
                     "accelz": splitedBuffer[5],
                     "magx": splitedBuffer[6],
                     "magy": splitedBuffer[7],
+<<<<<<< HEAD
                     "magz": splitedBuffer[8]
+=======
+                    "magz": splitedBuffer[8],
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
                 }
                 self.queuesList[ImuData.Queue.value].put(
                     {
                         "Owner": ImuData.Owner.value,
                         "msgID": ImuData.msgID.value,
                         "msgType": ImuData.msgType.value,
+<<<<<<< HEAD
                         "msgValue": data,
                     }
                 )
+=======
+                        "msgValue": data
+                    }
+                )
+        elif buff[1] == '8':
+            if (buff[3:-2]!="ack;;"):
+                self.queuesList[FrontDistance.Queue.value].put(
+                    {
+                        "Owner": FrontDistance.Owner.value,
+                        "msgID": FrontDistance.msgID.value,
+                        "msgType": FrontDistance.msgType.value,
+                        "msgValue": float(buff[3:-2]),
+                    }
+                )
+                # print(float(buff[3:-5]))
+        # elif buff[1] == '11':
+        #     if (buff[3:-2]!="ack;;"):
+        #         self.queuesList[Infrared.Queue.value].put(
+        #             {
+        #                 "Owner": Infrared.Owner.value,
+        #                 "msgID": Infrared.msgID.value,
+        #                 "msgType": Infrared.msgType.value,
+        #                 "msgValue": float(buff[3:-2]),
+        #             }
+        #         )
+ 
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010

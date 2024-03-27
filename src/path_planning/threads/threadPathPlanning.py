@@ -1,6 +1,10 @@
 import cv2
 import threading
 import base64
+<<<<<<< HEAD
+=======
+import time
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 import networkx as nx
 
 import src.path_planning.threads.path_planning as pp 
@@ -76,6 +80,7 @@ class threadPathPlanning(ThreadWithStop):
     # ================================ RUN ================================================
     def run(self):
         """This function will run while the running flag is True"""
+<<<<<<< HEAD
         if self._running:
             G = nx.read_graphml("/home/elias/RAS/BFMC_2024/Brain/src/path_planning/threads/Competition_track_graph.graphml")    #read graph
             target_nodes = [26,10,4,1]
@@ -122,6 +127,39 @@ class threadPathPlanning(ThreadWithStop):
                 full_path.append(min_path[len(min_path)-1]) #to append last node
 
                         #comment: list(map(int, ....)) converts the returned path nodes to integers, because they are returned as strings!!
+=======
+        
+        G = nx.read_graphml("/home/elias/RAS/BFMC_2024/Brain/src/path_planning/threads/Competition_track_graph.graphml")    #read graph
+
+        while self._running:
+            if self.pipeRecvCalc.poll():
+                self.source = self.pipeRecvCalc.recv()
+                
+                path = []
+
+                dashed = []
+                dashed_sources = []
+
+                for edge in G.edges(data=True):
+                    if "dotted" in edge[2] and edge[2]["dotted"] == True:
+                        dashed.append(edge)         #edges over dashed lines (overtaking allowed)
+
+                dashed_sources = [int(edge[0]) for edge in dashed]  #source nodes from which dashed lines to other nodes exist
+
+                # Create a dictionary to store nodes
+                graph = {}
+
+                for n in G.nodes():
+                    node_coordinates = G.nodes[n]
+                    n = int(n)
+                    node_info = node(node_coordinates['x'], node_coordinates['y'], [int(node) for node in list(G.successors(str(n)))])
+                    if n in dashed_sources:
+                        node_info.dashed = True     #from this node starts a dash line to any of its successors
+                    graph[n] = node_info
+
+                path = list(map(int, nx.shortest_path(G, source=str(self.source['value']), target='364', weight=None, method='dijkstra')))       #compute shortest path starting from node 472 (starting point)
+                #comment: list(map(int, ....)) converts the returned path nodes to integers, because they are returned as strings!!
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
                 '''
                 We can easily access information for the given path using the graph dictionary like so:
@@ -148,7 +186,11 @@ class threadPathPlanning(ThreadWithStop):
                         "Owner": Path.Owner.value,
                         "msgID": Path.msgID.value,
                         "msgType": Path.msgType.value,
+<<<<<<< HEAD
                         "msgValue": full_path
+=======
+                        "msgValue": path
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
                     }
                 )
 

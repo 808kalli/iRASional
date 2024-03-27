@@ -82,6 +82,11 @@ class processTrafficCommunication(WorkerProcess):
 if __name__ == "__main__":
     from multiprocessing import Queue, Event
     import time
+<<<<<<< HEAD
+=======
+    from src.utils.messages.allMessages import  Location
+
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 
     shared_memory = sharedMem()
     locsysReceivePipe, locsysSendPipe = Pipe(duplex=False)
@@ -100,7 +105,11 @@ if __name__ == "__main__":
     print("yes")
     traffic_communication.start()
     time.sleep(3)
+<<<<<<< HEAD
     #print(queueList["General"].get())
+=======
+    print(queueList["General"].get())
+>>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
   
 
     traffic_communication.stop()
