@@ -284,6 +284,8 @@ class threadMove(ThreadWithStop):
         parking_found = False
         tailing = False
         
+        lane_offset = 0
+        
         directions = []
         
         A = 0.4
@@ -351,7 +353,7 @@ class threadMove(ThreadWithStop):
                         image_data = base64.b64decode(frame["value"])
                         img = np.frombuffer(image_data, dtype=np.uint8)
                         image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-                        angle = lf.followLane(image, self.K, self.speed)
+                        angle, lane_offset = lf.followLane(image, self.K, self.speed)
                         if angle is not None:
                             angle, offset = np.clip(angle, -25, 25)
                             steer(self.queuesList, angle)
@@ -435,14 +437,14 @@ class threadMove(ThreadWithStop):
                             brake(self.queuesList)
                             time.sleep(2)
                             setSpeed(self.queuesList, self.speed)
-                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList)
+                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                        
                         elif (sign == "Priority" or sign == "Stop"):
                             print("seen sign:", sign)
                             sign_reaction(self.queuesList, sign)
                             setSpeed(self.queuesList, self.speed)
                             current = directions.pop(0)
-                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList)
+                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                         
                         elif (sign == "Crosswalk"):
                             sign_reaction(self.queuesList, sign, self.piperecvPed)
