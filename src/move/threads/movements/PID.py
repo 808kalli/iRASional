@@ -17,6 +17,9 @@ class PID:
         self.K = 0
         self.pTime = time.time()
 
+    def update_target(self, new_target):
+        self.targetVal = new_target
+
     def update(self, cVal):
         t = time.time() - self.pTime
         error = self.targetVal - cVal
@@ -37,7 +40,11 @@ class PID:
         self.pError = error
         self.ptime = time.time()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
         return result
+=======
+        return result
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84

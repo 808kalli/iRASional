@@ -58,14 +58,18 @@ from src.utils.messages.allMessages import (
     Estimate,
     InterDistance,
     MoveConfig,
-    CurrentSpeed,
     Pos,
 <<<<<<< HEAD
     Location
 =======
     FrontDistance,
+<<<<<<< HEAD
     Semaphores
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
+=======
+    Semaphores,
+    CurrentSpeed
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
 )
 from src.templates.threadwithstop import ThreadWithStop
 
@@ -77,6 +81,9 @@ from src.move.threads.movements.pedestrian_reaction import pedestrian_reaction
 from src.move.threads.movements.intersection import gostraight, right_turn, left_turn, intersection_navigation
 =======
 from src.move.threads.movements.intersection import gostraight, draw_trajectory, intersection_navigation
+from src.move.threads.movements.roundabout import draw_roundabout_trajectory
+from src.move.threads.movements.tailing import tail
+
 
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 class threadMove(ThreadWithStop):
@@ -345,6 +352,10 @@ class threadMove(ThreadWithStop):
         intersection_searching = False
         reduced_speed = False
         parking_found = False
+        tailing = False
+        
+        lane_offset = 0
+        
         directions = []
         
         A = 0.4
@@ -353,7 +364,7 @@ class threadMove(ThreadWithStop):
         #start of parking spot
         parking_time=0
         count = 0
-        
+        counttail = 0
         
         time.sleep(0.5) #wait for initializations of the other processes    
         while self._running:
@@ -508,10 +519,11 @@ class threadMove(ThreadWithStop):
                         image_data = base64.b64decode(frame["value"])
                         img = np.frombuffer(image_data, dtype=np.uint8)
                         image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-                        angle = lf.followLane(image, self.K, self.speed)
+                        angle, lane_offset = lf.followLane(image, self.K, self.speed)
                         if angle is not None:
-                            angle = np.clip(angle, -25, 25)
+                            angle, offset = np.clip(angle, -25, 25)
                             steer(self.queuesList, angle)
+
                         self.pipeRecvcamera_lf.send("ready")
 
                     # ==================== Then do the checks ==================== #
@@ -551,10 +563,29 @@ class threadMove(ThreadWithStop):
                             print("seen pedestrian")
                             brake(self.queuesList)
                             time.sleep(2)
-                            
+
                             if not self.piperecvPed.poll():
                                 setSpeed(self.queuesList, self.speed)
                     
+                    # ------------------- Check number 4: localization ----------------------#
+                    if self.pipeRecvPos.poll():
+                        (coordinates, node) = self.pipeRecvPos.recv()['value']
+                        print("Current node: ", node, " at coordinates: ", coordinates)
+                        coordinates = (coordinates[0], coordinates[1])
+
+                        self.pipeRecvPos.send("ready")
+                    # ------------------- Check number 5: tailing conditions ----------------------#
+                    if self.pipeRecvfdist.poll():
+                        front_dist = self.pipeRecvfdist.recv()["value"]
+                        self.pipeRecvfdist.send("ready")
+                        if(front_dist < 80):
+                            counttail = counttail + 1
+                        else:
+                            counttail = 0
+                        if(counttail>=4):
+                            steer(self.queuesList, 0)
+                            tail(self.pipeRecvfdist, self.queuesList, self.pipeRecvcamera_lf, self.K, 100 )
+
                     # ==================== Use the flags to find if we need a reaction ==================== #
                     
                     if intersection_seen:
@@ -569,25 +600,27 @@ class threadMove(ThreadWithStop):
                         
                         if (sign_seen == False):
                             current = directions.pop(0)
-                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList)
+                            brake(self.queuesList)
+                            time.sleep(2)
+                            setSpeed(self.queuesList, self.speed)
+                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                        
                         elif (sign == "Priority" or sign == "Stop"):
                             print("seen sign:", sign)
                             sign_reaction(self.queuesList, sign)
                             setSpeed(self.queuesList, self.speed)
                             current = directions.pop(0)
-                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList)
+                            intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                         
                         elif (sign == "Crosswalk"):
                             sign_reaction(self.queuesList, sign, self.piperecvPed)
-                            setSpeed(self.queuesList, self.speed)                           
+                            setSpeed(self.queuesList, self.speed)
                             gostraight(self.pipeIMUrecv, self.queuesList, int(70/int(self.speed)))
                         
                         elif (sign == "Parking"):
                             print("seen sign:", sign)
                             # find_parking()
                             if (not parking_found):
-                                print("here")
                                 distance = float(self.pipeRecvfdist.recv()["value"])
                                 self.pipeRecvfdist.send("ready")
                                 print("distance =", distance)
@@ -632,10 +665,26 @@ class threadMove(ThreadWithStop):
                         
                 # -------->> EVERYTHING AFTER "else" IS FOR TESTING
                 else:
-                    if self.pipeIMUrecv.poll():
-                        print(self.pipeIMUrecv.recv())
-                        self.pipeIMUrecv.send("ready")
-                    pass
+                    angles, distances = draw_roundabout_trajectory(0, 0, 0)
+                    angle=0
+                    i = 0
+                    for dist in distances:
+                        t = dist / 15.0
+                        if (angles[i] > 0 and angle < 0):
+                            angle = -7
+                        elif (angles[i] < 0 and angle > 20):
+                            angle = 15
+                        else:
+                            angle = angle + angles[i]
+                        steer(self.queuesList, angle)
+                        i = i + 1
+                        time.sleep(t)
+                    brake(self.queuesList)
+                    break
+                    # if self.pipeIMUrecv.poll():
+                    #     print(self.pipeIMUrecv.recv())
+                    #     self.pipeIMUrecv.send("ready")
+                    # pass
                     
                     # ================ Semaphores Testing ==================================#
                     # while(True):
@@ -649,6 +698,7 @@ class threadMove(ThreadWithStop):
 
                     #========================LOCALIZATION + LANE FOLLOWING==========================================
                     
+<<<<<<< HEAD
                     try:
                         if self.pipeRecvcamera_lf.poll():
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
@@ -724,6 +774,8 @@ class threadMove(ThreadWithStop):
 
                     #========================LOCALIZATION==========================================
 
+=======
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
                     # try:
                     #     if self.pipeRecvcamera_lf.poll():
                     #         frame = self.pipeRecvcamera_lf.recv()
@@ -737,6 +789,7 @@ class threadMove(ThreadWithStop):
                     #             steer(self.queuesList, angle)
                     #         self.pipeRecvcamera_lf.send("ready")
 
+<<<<<<< HEAD
                     #     if self.pipeRecvPos.poll():
                     #         coordinates = self.pipeRecvPos.recv()['value']
                     #         print(coordinates)
@@ -747,6 +800,37 @@ class threadMove(ThreadWithStop):
                     #         # Open the file in write mode
                     #         with open(file_name, 'w') as file:
                     #             file.write(str(coordinates) + '\n')
+=======
+                            # self.queuesList[CurrentSpeed.Queue.value].put( #send current velocity to do position calculation
+                            #     {
+                            #         "Owner": CurrentSpeed.Owner.value,
+                            #         "msgID": CurrentSpeed.msgID.value,
+                            #         "msgType": CurrentSpeed.msgType.value,
+                            #         "msgValue": 0.15
+                            #     }   
+                            # )
+
+                    #     if self.pipeRecvPos.poll():
+                    #         (coordinates, node) = self.pipeRecvPos.recv()['value']
+                    #         print(node)
+                    #         coordinates = (coordinates[0], coordinates[1])
+                    #         # print(coordinates)
+
+                    #         # Graph trajectory
+                    #         file_path = 'coordinates.txt'
+                    #         data_to_write = str(coordinates)
+
+                    #         with open(file_path, 'r') as file:
+                    #             lines = file.readlines()
+
+                    #         empty_line_index = next((i for i, line in enumerate(lines) if line.strip() == ''), len(lines))
+
+                    #         with open(file_path, 'a') as file:
+                    #             if empty_line_index > 0:
+                    #                 file.write('\n')
+                    #             file.write(data_to_write)
+
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
 
                     #         self.pipeRecvPos.send("ready")
 
@@ -756,8 +840,11 @@ class threadMove(ThreadWithStop):
                     #     if self.pipeRecvcamera_lf.poll():
                     #         self.pipeRecvcamera_lf.recv()
                     #     self.pipeRecvcamera_lf.send("ready")
+<<<<<<< HEAD
 =======
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
+=======
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
                     
 
                         
@@ -783,6 +870,7 @@ class threadMove(ThreadWithStop):
                     #         path = self.pipeRecvPathPlanning.recv()
                     #         print("Current path: ", path['value'])
                     #         self.pipeRecvPathPlanning.send("ready")
+<<<<<<< HEAD
 <<<<<<< HEAD
                     #         break
 
@@ -813,3 +901,6 @@ class threadMove(ThreadWithStop):
 =======
                     #         break
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
+=======
+                    #         break
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84

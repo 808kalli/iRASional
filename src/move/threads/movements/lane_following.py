@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import time
 #from src.move.threads.movements.stanley import *
 import logging
+import base64
+from src.move.threads.movements.basic import steer
 
 # uncomment for results 
 
@@ -399,9 +401,14 @@ def followLane(img, K, speed=15):
                 angle = stanley_correction(error_in_pixs, error_in_degrees, K, speed)
                 # logging.info("K = %.2f",K)
                 # logging.info("pixel error: %.2f degree error: %.2f stanley angle: %.2f",error_in_pixs,error_in_degrees, angle)
+<<<<<<< HEAD
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
                 return angle
+=======
+                return angle, error_in_pixs
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
             else: 
-                return 0
+                return 0,0
     except:
         print("no lanefollowing")
+    

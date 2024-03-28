@@ -2,8 +2,10 @@ from src.utils.messages.allMessages import (
 SpeedMotor,
 SteerMotor,
 Brake,
-Record
+Record,
+CurrentSpeed
 )
+import numpy as np
 
 def setSpeed(queuesList, speed=15):
 <<<<<<< HEAD
@@ -21,10 +23,22 @@ def setSpeed(queuesList, speed=15):
         "msgValue": speed
     }
     )
-    
+
+    queuesList[CurrentSpeed.Queue.value].put( #send current velocity to do position calculation
+        {
+            "Owner": CurrentSpeed.Owner.value,
+            "msgID": CurrentSpeed.msgID.value,
+            "msgType": CurrentSpeed.msgType.value,
+            "msgValue": float(speed)/100
+        }   
+    )
+
 def steer(queuesList, angle):
     # print("#----- steering -----#")
     # print("angle =", angle)
+    
+    angle = np.clip(angle, -23, 23)
+
     queuesList[SteerMotor.Queue.value].put(
     {
         "Owner": SteerMotor.Owner.value,
@@ -44,7 +58,16 @@ def brake(queuesList):
         "msgValue": 0
     }
     )
-    
+
+    queuesList[CurrentSpeed.Queue.value].put( #send current velocity to do position calculation
+        {
+            "Owner": CurrentSpeed.Owner.value,
+            "msgID": CurrentSpeed.msgID.value,
+            "msgType": CurrentSpeed.msgType.value,
+            "msgValue": 0.0
+        }   
+    )
+
 def start_recording(queuesList):
     queuesList[Record.Queue.value].put(
     {

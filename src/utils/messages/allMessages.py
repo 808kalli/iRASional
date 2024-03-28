@@ -187,7 +187,7 @@ class InterDistance(Enum):
     msgType = "dictionary"
 
 #=========================FOR KALMAN FILTER========================
-
+    
 class CurrentSpeed(Enum):
     Queue = "General"
     Owner = "theadMove"

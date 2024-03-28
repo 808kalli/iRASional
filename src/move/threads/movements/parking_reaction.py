@@ -76,7 +76,7 @@ from src.move.threads.movements.parking import draw_parking_trajectory
 
 def parking_reaction(queuesList):
     # parking
-    a, d = draw_parking_trajectory(0, 0, 0)
+    a, d = draw_parking_trajectory(0)
     i = 0
     angle = 0
     setSpeed(queuesList, -15)
@@ -125,4 +125,7 @@ def parking_reaction(queuesList):
     setSpeed(queuesList, 15)
     time.sleep(0.8)
     
+<<<<<<< HEAD
 >>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
+=======
+>>>>>>> 72fa1521fdb8afbbaa91a55b972aacaf77f43c84
