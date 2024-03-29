@@ -86,8 +86,6 @@ class threadMove(ThreadWithStop):
         # flags
         self.autonomous = True
         self.recording = False
-        self.functional = False #allows the robot to do anything if current node is on the calculated path
-
 
         self.current_node = None #initialize current node
         self.coordinates = None
