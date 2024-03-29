@@ -12,6 +12,7 @@ from src.utils.messages.allMessages import (
 )
 from src.templates.threadwithstop import ThreadWithStop
 
+
 class node:
     def __init__(self, x, y, next):
         self.x = x
@@ -122,6 +123,12 @@ class threadPathPlanning(ThreadWithStop):
                 full_path.append(min_path[len(min_path)-1]) #to append last node
 
                         #comment: list(map(int, ....)) converts the returned path nodes to integers, because they are returned as strings!!
+                directions = []
+                intersection = [49,8,78]
+                directions = pp.find_directions(full_path, intersection,graph) # find directions list
+
+
+                message = (full_path, directions) #send tuple message : path and directions
 
                 '''
                 We can easily access information for the given path using the graph dictionary like so:
@@ -148,7 +155,7 @@ class threadPathPlanning(ThreadWithStop):
                         "Owner": Path.Owner.value,
                         "msgID": Path.msgID.value,
                         "msgType": Path.msgType.value,
-                        "msgValue": full_path
+                        "msgValue": message
                     }
                 )
 
