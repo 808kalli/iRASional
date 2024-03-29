@@ -49,7 +49,6 @@ from src.utils.messages.allMessages import (
     Semaphores,
     CurrentSpeed,
     Calculate,
-    SignsSearching
 )
 from src.templates.threadwithstop import ThreadWithStop
 
@@ -453,7 +452,7 @@ class threadMove(ThreadWithStop):
                         intersection_searching = True
                     
                     if self.pipeRecvInterDet.poll():
-                        if self.current_node in self.stop_pos | self.prioriy_pos | self.parking_pos: #check if in correct nodes for intersection seen
+                        if self.current_node in self.path and self.current_node in self.stop_pos | self.prioriy_pos | self.parking_pos: #check if in correct nodes for intersection seen
                             distance = self.pipeRecvInterDet.recv()["value"]
                             intersection_seen = True
                             intersection_searching = False
@@ -463,7 +462,7 @@ class threadMove(ThreadWithStop):
                         
                     # -------------------- Check number 2: traffic signs -------------------- #
                     if self.piperecvTrSigns.poll():
-                        if self.current_node in self.stop_pos | self.prioriy_pos | self.parking_pos | self.crosswalk_pos: #see sign if in node with sign
+                        if self.current_node in self.path and self.current_node in self.stop_pos | self.prioriy_pos | self.parking_pos | self.crosswalk_pos: #see sign if in node with sign
                             sign=self.piperecvTrSigns.recv()["value"]
                             sign_seen = True
                             
@@ -512,7 +511,7 @@ class threadMove(ThreadWithStop):
                             intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                        
                         elif (sign == "Priority" or sign == "Stop"):
-                            if self.current_node in self.stop_pos | self.prioriy_pos:
+                            if self.current_node in self.path and self.current_node in self.stop_pos | self.prioriy_pos:
                                 print("Seen sign:", sign)
                                 sign_reaction(self.queuesList, sign)
                                 setSpeed(self.queuesList, self.speed)
@@ -520,13 +519,13 @@ class threadMove(ThreadWithStop):
                                 intersection_navigation(current, self.pipeIMUrecv, self.queuesList, lane_offset)
                         
                         elif (sign == "Crosswalk"):
-                            if self.current_node in self.crosswalk_pos:
+                            if self.current_node in self.path and self.current_node in self.crosswalk_pos:
                                 sign_reaction(self.queuesList, sign, self.piperecvPed)
                                 setSpeed(self.queuesList, self.speed)
                                 gostraight(self.pipeIMUrecv, self.queuesList, int(70/int(self.speed)))
                         
                         elif (sign == "Parking"):
-                            if self.current_node in self.parking_pos:
+                            if self.current_node in self.path and self.current_node in self.parking_pos:
                                 print("seen sign:", sign)
                                 # find_parking()
                                 if (not parking_found):

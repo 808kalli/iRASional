@@ -285,11 +285,3 @@ class Pedestrian(Enum):
     Owner = "threadPedestrian"
     msgID = 1
     msgType = "boolean"
-
-################################# For Traffic Signs ##################################
-    
-class SignsSearching(Enum):
-    Queue = "General"
-    Owner = "theadMove"
-    msgID = 15
-    msgType = "boolean"
