@@ -76,11 +76,7 @@ PCCommunicationDemo = False
 PCCommunicationDashBoard = True
 CarsAndSemaphores = False
 SerialHandler = True
-<<<<<<< HEAD
-Signs_Detection = False
-=======
 Signs_Detection = True
->>>>>>> 34965e969f6bceba984ba243fb9b98c0d90b4010
 PathPlanning = False
 Gps = True
 Kalman = True
