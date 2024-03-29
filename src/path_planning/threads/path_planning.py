@@ -29,3 +29,34 @@ def print_path_info(G, graph, path):
             element, graph[element].x, graph[element].y, next_nodes_str, graph[element].dashed
         ))
 
+def find_directions(path, intersection, graph):
+    i = 0
+    directions = []
+    for node in path:
+        if node in intersection:
+            if ((graph[node].y == graph[path[i+2]].y) or (graph[node].x == graph[path[i+2]].x)):
+                directions.append("STRAIGHT")
+            elif (((graph[node].y > graph[path[i+2]].y) and (graph[node].x > graph[path[i+2]].x)) or ((graph[node].y < graph[path[i+2]].y) and (graph[node].x < graph[path[i+2]].x))):
+                directions.append("LEFT")
+            elif (((graph[node].y > graph[path[i+2]].y) and (graph[node].x < graph[path[i+2]].x)) or ((graph[node].y < graph[path[i+2]].y) and (graph[node].x > graph[path[i+2]].x))):
+                directions.append("RIGHT")
+        i = i+1
+    return directions
+
+
+
+def find_position(G, gpsx, gpsy):
+        minID = '0'
+        minx = 0
+        miny = 0
+        min_distance = 88888888
+
+        for i in G.nodes:
+            distance = math.sqrt((pow(gpsx - G.nodes[i]['x'], 2 )+ pow(gpsy - G.nodes[i]['y'], 2)))
+            if distance < min_distance:
+                min_distance = distance
+                minx = G.nodes[i]['x']
+                miny = G.nodes[i]['y']
+                minID = i
+
+        return minID
