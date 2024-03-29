@@ -2,9 +2,8 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 import matplotlib.pyplot as plt
 
-def draw_parking_trajectory(phi):
-    offset = 0
-    x = [15 - offset, 20 - offset, 95, 100]
+def draw_parking_trajectory(phi, offset = 0):
+    x = [15 - offset, 20 - offset, 95, 100 - offset]
     y = [5 - offset, 5 - offset, 75 - offset, 75 - offset]
 
     yy = CubicSpline(x, y)

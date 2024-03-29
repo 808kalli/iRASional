@@ -16,18 +16,12 @@ def tail(fdistpipe ,queuesList,imgpipe, K, t):
     tailingPID = PID([kp,ki,kd],distance_to_keep,[-25,25])
     start_time = time.time()
     steer(queuesList,0)
-    speed = 0
-    angle = 0
-    temp = time.time()
-    while (time.time() - start_time <= t):      
-        if fdistpipe.poll() and time.time()-temp > 0.2 :
-            temp = time.time()
+    while (time.time() - start_time <= t):
+        if fdistpipe.poll():
             dist = fdistpipe.recv()["value"]
             print(dist)
             fdistpipe.send("ready")
             speed = -tailingPID.update(dist)
-            if(abs(angle)>15):
-                speed = np.clip(speed, 0, 15)
             print("speed: " + str(speed))
             setSpeed(queuesList, speed)
         if imgpipe.poll():

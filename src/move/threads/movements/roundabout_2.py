@@ -26,7 +26,7 @@ def draw_roundabout_trajectory(x, y, check, phi):
         [0.1, -1.8], [0.5, -0.9], [0.8, -0.2], [0.6, 0.4], [0.25, 0.8], ]) * radius
     elif(check == 3):
         points = np.array([
-        [0.1, -1.8], [0.5, -0.9], [0.8, -0.2], [0, 1], [-0.4, 0.7], [-0.65, 0.17]]) * radius
+        [0.1, -1.8], [0.5, -0.9], [0.8, -0.2], [0, 1], [-0.4, 0.7], [-0.7, 0.2]]) * radius
     x, y = points.T
     # Creating a parametric spline. The 's' parameter controls the smoothness.
     # 'per' is set to True for a periodic spline (useful for closed paths)

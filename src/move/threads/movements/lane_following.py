@@ -328,7 +328,7 @@ def lane_det(bird_view, original_image, Minv):
         result = cv2.addWeighted(original_image, 0.8, newwarp, 1, 0)
         cv2.imshow('result', result)
     
-    error_in_pixs = current_trajectory[0][0] - desired_trajectory[bird_height-1][0] - 60
+    error_in_pixs = current_trajectory[0][0] - desired_trajectory[bird_height-1][0] - 40
     degree_error = np.arctan(degree_error) * (180 / np.pi)
     degree_error = round(degree_error, 1)
     

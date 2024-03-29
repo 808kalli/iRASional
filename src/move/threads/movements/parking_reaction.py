@@ -2,9 +2,9 @@ import time
 from src.move.threads.movements.basic import setSpeed, steer, brake
 from src.move.threads.movements.parking import draw_parking_trajectory
 
-def parking_reaction(queuesList):
+def parking_reaction(queuesList, offset):
     # parking
-    a, d = draw_parking_trajectory(0)
+    a, d = draw_parking_trajectory(0, offset)
     i = 0
     angle = 0
     setSpeed(queuesList, -15)

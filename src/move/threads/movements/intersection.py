@@ -48,8 +48,7 @@ def gostraight(pipe, queuesList, t):
             print("steer", angle)
             steer(queuesList, angle)
 
-def draw_trajectory(xs, xf, phi):
-    offset = 0
+def draw_trajectory(xs, xf, phi, offset = 0, extra_angle = 0):
     x = [0, 20 - offset, 72 - offset]
     y = [0, 15 - offset, 25 - offset]
     xx = np.linspace(min(x), max(x), 3)
@@ -74,10 +73,9 @@ def draw_trajectory(xs, xf, phi):
     for i in range(len(angles)):
         angles[i] = 90 - angles[i]
 
-    return np.diff(angles), distances
+    return np.diff(angles) - extra_angle, distances
 
-def draw_trajectory_left(xs, xf, phi):
-    offset = 0
+def draw_trajectory_left(xs, xf, phi, offset):
     x = [0, 20 - offset, 68 - offset]
     y = [0, 50 - offset, 100 - offset]
     xx = np.linspace(min(x), max(x), 8)
@@ -107,7 +105,7 @@ def draw_trajectory_left(xs, xf, phi):
 def intersection_navigation(current, pipe, queuesList, offset = 0, speed=15):
     if current == "RIGHT":
         gostraight(pipe, queuesList, 0.5)
-        angles, distances = draw_trajectory(offset, 0, 0)
+        angles, distances = draw_trajectory(0, 0, 0, offset)
         i = 0
         angle=0
         for dist in distances:
@@ -118,7 +116,7 @@ def intersection_navigation(current, pipe, queuesList, offset = 0, speed=15):
             time.sleep(t)
     elif current == "LEFT":
         gostraight(pipe, queuesList, 0.5)
-        angles, distances = draw_trajectory_left(offset, 0, 0)
+        angles, distances = draw_trajectory_left(0, 0, 0, offset)
         i = 0
         angle=0
         for dist in distances:

@@ -283,6 +283,7 @@ class threadMove(ThreadWithStop):
         reduced_speed = False
         parking_found = False
         tailing = False
+        counter = 0
         
         lane_offset = 0
         
@@ -321,7 +322,7 @@ class threadMove(ThreadWithStop):
                         
                     # here should go the path planning 
                     
-                    directions = ["LEFT", "STRAIGHT", "END"]
+                    directions = ["STRAIGHT", "STRAIGHT", "END"]
                     
                     print("running")
                     setSpeed(self.queuesList, self.speed)
@@ -353,9 +354,10 @@ class threadMove(ThreadWithStop):
                         image_data = base64.b64decode(frame["value"])
                         img = np.frombuffer(image_data, dtype=np.uint8)
                         image = cv2.imdecode(img, cv2.IMREAD_COLOR)
-                        angle, lane_offset = lf.followLane(image, self.K, self.speed)
-                        if angle is not None:
-                            angle, offset = np.clip(angle, -25, 25)
+                        data = lf.followLane(image, self.K, self.speed)
+                        if(data is not None):
+                            angle, lane_offset = data 
+                            angle = np.clip(angle, -25, 25)
                             steer(self.queuesList, angle)
 
                         self.pipeRecvcamera_lf.send("ready")
@@ -418,8 +420,16 @@ class threadMove(ThreadWithStop):
                             counttail = 0
                         if(counttail>=4):
                             steer(self.queuesList, 0)
-                            tail(self.pipeRecvfdist, self.queuesList, self.pipeRecvcamera_lf, self.K, 100 )
-
+                            steer(self.queuesList, 0)
+                            tail(self.pipeRecvfdist, self.queuesList, self.pipeRecvcamera_lf, self.K, 100)
+                            
+                    # -------------------- Check number 6: traffic lights -------------------- #
+                    if self.pipeRecvsemaphores.poll():
+                        Semaphore = (self.pipeRecvsemaphores.recv())
+                        if(Semaphore["id"]==2):
+                            print(Semaphore["value"]["state"])
+                        self.pipeRecvsemaphores.send("ready")            
+                
                     # ==================== Use the flags to find if we need a reaction ==================== #
                     
                     if intersection_seen:
@@ -482,7 +492,7 @@ class threadMove(ThreadWithStop):
                                     continue
                                 brake(self.queuesList)
                                 time.sleep(2)
-                                sign_reaction(self.queuesList, "Parking")
+                                sign_reaction(self.queuesList, "Parking", pipe = None, offset=lane_offset)
                                 setSpeed(self.queuesList, self.speed)
                         else:
                             print("seen sign:", sign)
@@ -499,35 +509,35 @@ class threadMove(ThreadWithStop):
                         
                 # -------->> EVERYTHING AFTER "else" IS FOR TESTING
                 else:
-                    angles, distances = draw_roundabout_trajectory(0, 0, 0)
-                    angle=0
-                    i = 0
-                    for dist in distances:
-                        t = dist / 15.0
-                        if (angles[i] > 0 and angle < 0):
-                            angle = -7
-                        elif (angles[i] < 0 and angle > 20):
-                            angle = 15
-                        else:
-                            angle = angle + angles[i]
-                        steer(self.queuesList, angle)
-                        i = i + 1
-                        time.sleep(t)
-                    brake(self.queuesList)
-                    break
-                    # if self.pipeIMUrecv.poll():
-                    #     print(self.pipeIMUrecv.recv())
-                    #     self.pipeIMUrecv.send("ready")
-                    # pass
-                    
-                    # ================ Semaphores Testing ==================================#
-                    # while(True):
-                    #     Semaphore = (self.pipeRecvsemaphores.recv())
-                    #     print(Semaphore)
-                    #     if(Semaphore["id"]==2):
-                    #         print(Semaphore["value"]["state"])
-                    #     self.pipeRecvsemaphores.send("ready")
-                    # pass
+                    if counter == 0:
+                        angles, distances = draw_roundabout_trajectory(0, 0, 3, 0)
+                        angle=0
+                        i = 0
+                        for dist in distances:
+                            t = dist / 15.0
+                            if (angles[i] > 0 and angle < 0):
+                                angle = -7
+                            elif (angles[i] < 0 and angle > 20):
+                                angle = 15
+                            else:
+                                angle = angle + angles[i]
+                            steer(self.queuesList, angle)
+                            i = i + 1
+                            time.sleep(t)
+                        counter = 1
+                        
+                    if self.pipeRecvcamera_lf.poll():
+                        frame = self.pipeRecvcamera_lf.recv()
+                        image_data = base64.b64decode(frame["value"])
+                        img = np.frombuffer(image_data, dtype=np.uint8)
+                        image = cv2.imdecode(img, cv2.IMREAD_COLOR)
+                        cv2.imwrite("test.jpg", image)
+                        data = lf.followLane(image, self.K, self.speed)
+                        if data is not None:
+                            angle, offset = data
+                            angle = np.clip(angle, -25, 25)
+                            steer(self.queuesList, angle)
+                        self.pipeRecvcamera_lf.send("ready")
 
 
                     #========================LOCALIZATION + LANE FOLLOWING==========================================

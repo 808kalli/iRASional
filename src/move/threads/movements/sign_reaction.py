@@ -2,7 +2,7 @@ import time
 from src.move.threads.movements.basic import setSpeed, steer, brake
 from src.move.threads.movements.parking_reaction import parking_reaction
 
-def sign_reaction(queuesList, sign, pipe = None):
+def sign_reaction(queuesList, sign, pipe = None, offset = 0):
     if sign == "Stop":
         brake(queuesList)
         time.sleep(1)
@@ -13,7 +13,7 @@ def sign_reaction(queuesList, sign, pipe = None):
         time.sleep(3)
 
     elif sign == "Parking":
-        parking_reaction(queuesList)
+        parking_reaction(queuesList, offset)
     
     elif sign == "highway_entry":
         setSpeed(queuesList,20) 
